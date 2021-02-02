@@ -1,22 +1,16 @@
-//Prêdkoœæ 4800
-
-
-
 #include <8051.h>
 __bit __at(0x97) LED;
-
+__bit __at(0x95) BUZZER;
 __bit __at(0xB5) kbt1;//p3.5
 __sbit __at (0x96) seg;
 __sbit __at (0XB5) T1;
 __bit recflag=0; // flaga odebrania znaku
 __bit sendflag=0; // dane gotowe do transmisji
-__data unsigned char znaki_odebrane[8]={' ',' ',' ',' ',' '};//, znaki_dowys[8];
-__data unsigned char znaki_dowyslania[8];
-unsigned char odebrane;
+unsigned char znaki_odebrane[8],odebrane;
 unsigned char t0_flag=0,t0_flag1=0 ;//flag 1 do migania w trybie edycji
 unsigned char indeks = 0,ktoryedytowany=0;// do wyœwietlacza
-unsigned int licznik=0,pom=0,wyswietlana =0,licznik2=0,licznik3=0;
-unsigned int indeks1=0,i=0,in=0,cotrzy=0,mk=0;
+unsigned int licznik=0,pom=0,do_sekundy=150,wyswietlana =0,licznik2=0,licznik3=0;
+unsigned int indeks1=0,i=0,todelay,in=0;
 unsigned char key;//stan klawiatury
 int pom3 = 0, pom2= 0;
 __code unsigned char Cyfry[10]= {0b0111111, 0b0000110, 0b1011011, 0b1001111, 0b1100110, 0b1101101, 0b1111101, 0b0000111, 0b1111111, 0b1101111};
@@ -29,6 +23,9 @@ __xdata unsigned char* buf_CSDS = (__xdata unsigned char*) 0xFF30;
 __xdata unsigned char * buf_CSKB0 = (__xdata unsigned char*) 0xff21;
 __xdata unsigned char * buf_CSKB1 = (__xdata unsigned char*) 0xff22;
 
+
+
+
 void t0_int(void) __interrupt(1);
 void INIT();
 void _7SEG_REFRESH();  //odœwierzanie wyœwietlacza
@@ -37,9 +34,10 @@ void KLAW_MULT(); //obs³uga klawiatury
 void DELAY();   //spowolnienie wyœwietlania edytowanych cyfr - w celu zmiany jasnoœci
 void OBSLUGA();  //zmiany wartoœci w trybie edycji
 void sio_int(void) __interrupt(4);
-void tr();
+void rec();
+void send();
 void _KB();
-void edit();
+
 
 void main()
 {
@@ -59,22 +57,26 @@ TIME();
 
 
 } //ni¿ej tr szer
-tr();
+if(recflag){
+  recflag=0;
+  rec();
+  }
+
+  if(sendflag)
+  send();
 _KB();//klawiatura matrycowa
 
-KLAW_MULT();
+KLAW_MULT(); //ale potrzebne nowe inne zmienne ni¿ w wyœwietlaczu
 }//koniec while
 
-} //koniec main
-
-
+}
 void INIT()
 {
 
-TMOD=0b00100001;//T1 off, T0-16bit
+TMOD=0b01110001;//T1 off, T0-16bit
 TR0=1;
 TL0=0b00000000;
-TH0 = 253;//pocz¹tkowa wartoœæ licznika
+TH0 = 240;//pocz¹tkowa wartoœæ licznika
 TF0 = 0;
 
 ET0 = 1;
@@ -84,8 +86,8 @@ ET0 = 1;
 SCON=0b01010000;
 TMOD&=0b00101111;
 TMOD|=0b00100000;
-TL1=0xFA;
-TH1=0xFA;
+TL1=0xFD;
+TH1=0xFD;
 PCON&=0b01111111;
 TR1=1;  //zgoda na zliczanie przez T1
 TF1 = 0;  // po przepe³nieniu ustawia 1(flaga)
@@ -160,11 +162,11 @@ void TIME()
 {
 	licznik++ ;
 
-	if(licznik == 1200)  {
+	if(licznik == do_sekundy)  {
 	  licznik = 0;
       	  t0_flag = 1;
 	t0_flag1 = 1;             }
-           TH0 = 253;
+           TH0 = 232;
 	  _7SEG_REFRESH();//odœwierzanie tutaj
 // TH0 = 240;
 }
@@ -236,21 +238,16 @@ wyswietlana = 0;
 	{       //seg = 1; //wy³¹cz
 		*buf_CSDS = indeks;
 		*buf_CSDB = Cyfry[trybedycji[wyswietlana]];
-		if(cotrzy==2)//aby œwieci³a siêciemniej wartoœæ edytowana zmieñ na 1 aby œwieci³o siê jaœniej/czêœciej
-		cotrzy=0;
 
-
-
-                if(ktoryedytowany!=0&&(wyswietlana==0||wyswietlana==1)&&(cotrzy==0)) //edytowana wartoœæ œwieci s³abiej- reszta œwieci jaœniej -ma przed³u¿one œwiecenie
-		seg=0;
-                else if(ktoryedytowany!=1&&(wyswietlana==2||wyswietlana==3)&&(cotrzy==0))
-		seg=0;
-                else if(ktoryedytowany!=2&&(wyswietlana==4||wyswietlana==5)&&(cotrzy==0))
-                seg=0;
-                else seg=0;
-
+		seg = 0; //w³¹cz
+                if(ktoryedytowany!=0&&(wyswietlana==0||wyswietlana==1)) //edytowana wartoœæ œwieci s³abiej- reszta œwieci jaœniej -ma przed³u¿one œwiecenie
+                DELAY();                                                 // za pomoc¹ funkcji DELAY()
+                if(ktoryedytowany!=1&&(wyswietlana==2||wyswietlana==3))
+                DELAY();
+                if(ktoryedytowany!=2&&(wyswietlana==4||wyswietlana==5))
+                DELAY();
                 seg = 1;  //wy³¹cz
-		cotrzy++;
+
             	wyswietlana++;
             	indeks = indeks << 1;
             	//seg = 0;  //w³¹cz
@@ -285,15 +282,12 @@ liczbystartowe[2]=trybedycji[2];
 liczbystartowe[3]=trybedycji[3];
 liczbystartowe[4]=trybedycji[4];
 liczbystartowe[5]=trybedycji[5];
-TL0 = 0;
-TH0 = 253;
+
  break;
  //wyjœcie z trybu edycji
 }
-if(in==0b00000010) { //ESC opuszcza tryb edycji czasu, a zegarek wznawia pracê od momentu w którym rozpoczêto edycjê.
-TH0 = 253;
-TL0 = 0;
-break;       }
+if(in==0b00000010)  //ESC opuszcza tryb edycji czasu, a zegarek wznawia pracê od momentu w którym rozpoczêto edycjê.
+break;
 
 if(in==0b00000100){// prawo rozpoczynaj¹ tryb edycji czasu i wybieraj¹ czy edycji bêd¹ podlega³y godziny, minuty, czy sekundy
 in=0;//aby wykona³ dzia³anie raz
@@ -447,12 +441,22 @@ ktoryedytowany++;
 }
 }
 }
-
+void DELAY()
+{
+	todelay=0;
+	while(todelay!=200)
+	todelay++;
+//	goto stop;
+//	stop:
+	//todelay=0;
+	//while(todelay!=150)
+	//todelay++;
+}
 
  void sio_int(void) __interrupt(4)
 {
-if (TI)   {  //jeœli wys³ano
-TI = 0;  //zerowanie flagi wysy³ania
+if (TI)   {  //jeœli odebrano
+TI = 0;  //zerowanie flagi odebrania
 
 	  }
 else   {
@@ -461,46 +465,36 @@ recflag =1 ;   //ustawienie flagi odebrania
 	}
 }
 
-
-void edit(){
-	if (znaki_odebrane[licznik3 - 1] == 10 && znaki_odebrane[licznik3 - 2] == 13)
-	{
-		if (znaki_odebrane[0] == 'E' && znaki_odebrane[1] == 'D' && znaki_odebrane[2] == 'I' && znaki_odebrane[3] == 'T' )//&& licznik3 == 6)
-		{
-		LED=0;
-		}
-		sendflag = 1;
-	}
-}
-
-
-void tr()
+		void send()
 {
 
-	if (recflag)
-	{
-		licznik3 = 0;
-		recflag = 0;
-		znaki_odebrane[licznik3] = SBUF;
-		if(znaki_odebrane[0]=='E')LED=0;//&&znaki_odebrane[2]=='I'&&znaki_odebrane[3]=='T') LED=0;
-		licznik3++;
-		edit();
-	//	set();
-	//	get();
+
+	if(licznik2==8){
+	   licznik2=0;//tablica char ma wielkoœæ = 8
+
 	}
-	else if (sendflag)
-	{
-		licznik2 = 0;
-		if ( TI)
-		return;
+if(TI)
+return;
+sendflag=0;
 
-			SBUF = znaki_dowyslania[licznik2];
-			licznik2++;
-
-
-		sendflag = 0;
-	}
+SBUF=znaki_odebrane[licznik2];
+licznik2++;
 }
+
+		void rec()
+{
+	if(licznik3==8){
+	licznik3=0;//tablica char ma wielkoœæ = 8
+
+	}
+odebrane=SBUF;
+
+
+znaki_odebrane[licznik3]=odebrane;
+licznik3++;
+sendflag=1;
+}
+
 
 
  void _KB()
