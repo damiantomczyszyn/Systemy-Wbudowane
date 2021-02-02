@@ -1,3 +1,7 @@
+//Prêdkoœæ 4800
+
+
+
 #include <8051.h>
 __bit __at(0x97) LED;
 __bit __at(0x95) BUZZER;
@@ -88,8 +92,8 @@ ET0 = 1;
 SCON=0b01010000;
 TMOD&=0b00101111;
 TMOD|=0b00100000;
-TL1=0xFD;
-TH1=0xFD;
+TL1=0xFA;
+TH1=0xFA;
 PCON&=0b01111111;
 TR1=1;  //zgoda na zliczanie przez T1
 TF1 = 0;  // po przepe³nieniu ustawia 1(flaga)
@@ -289,7 +293,7 @@ liczbystartowe[2]=trybedycji[2];
 liczbystartowe[3]=trybedycji[3];
 liczbystartowe[4]=trybedycji[4];
 liczbystartowe[5]=trybedycji[5];
-
+TH0 = 253;
  break;
  //wyjœcie z trybu edycji
 }
@@ -473,7 +477,7 @@ recflag =1 ;   //ustawienie flagi odebrania
 if(TI)
 return;
 sendflag=0;  //wys³a³ wiêc zeruje
-DELAY();
+//byl delay
 SBUF=znaki_odebrane[licznik2];
 licznik2++;
 
