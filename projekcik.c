@@ -3,7 +3,7 @@
 //GET bez enetra na koñcu
 //EDIT bez enetra na koñcu
 // Klawiatura multipleksowana dzia³a i obs³uguje kilka klawiszy jednoczeœnie
-// 
+//
 
 #include <8051.h>
 __bit __at(0x97) LED;
@@ -14,16 +14,18 @@ __sbit __at (0XB5) T1;
 __bit recflag=0; // flaga odebrania znaku
 __bit sendflag=0; // dane gotowe do transmisji
 __bit pomock=0;
-
+unsigned char ile=0;
 unsigned char key;//stan klawiatury
 __bit t0_flag=0,t0_flag1=0 ;//flag 1 do migania w trybie edycji
 unsigned char indeks = 0,ktoryedytowany=0;// do wyœwietlacza
 unsigned int licznik=0,pom=0,wyswietlana =0;
 unsigned int indeks1=0,i=0,in=0,cotrzy=0;
 unsigned char doseta=0;
-int pom3 = 0 , pom2= 0,licznik2=0,licznik3=0,x=0;
+int pom3 = 0 , pom2= 0;
+unsigned int licznik2=0,licznik3=0;
+short int x=0;
 __code unsigned char Cyfry[10]= {0b0111111, 0b0000110, 0b1011011, 0b1001111, 0b1100110, 0b1101101, 0b1111101, 0b0000111, 0b1111111, 0b1101111};
- unsigned char trybedycji[6] = {0,0,0,0,0,0};//hhmmss     //równie¿ do wyslania aktualnego czasu
+__data unsigned char trybedycji[6] = {0,0,0,0,0,0};//hhmmss     //równie¿ do wyslania aktualnego czasu
 __data unsigned char liczbystartowe[6] = {0,0,0,0,0,0};//hhmmss
 __data unsigned char klawmultipleks[6] = {0,0,0,0,0,0};//enter,esc,r,u,d,l
 
@@ -56,7 +58,11 @@ INIT();
 
 while(1)
 {
-	GET();
+
+
+ 	GET();
+	SET();
+
  if(recflag){
   recflag=0;
   rec();
@@ -66,7 +72,14 @@ while(1)
   send();
    if(t0_flag)
 {   t0_flag=0;
-
+if(licznik3!=0){
+ile++;
+ 	       if(ile%2==0)
+ 		{
+		zerowanieodbioru();
+		LED^=1;
+		//ERR
+		}   }
 
 TIME();
 
@@ -110,7 +123,7 @@ TF1 = 0;  // po przepe³nieniu ustawia 1(flaga)
 
 ES=1;
 EA=1;
-
+znaki_odebrane[0]='-';
 }
 
 void TIME()
@@ -483,8 +496,8 @@ void send()
 {
 if(TI)
 return;
-   x=0;
-   while(x!=300)
+   x=1;
+   while(x!=301)
    x++;
 
 sendflag=0;
@@ -504,14 +517,15 @@ void rec()
 //x=0;
 //while(x!=300)
 //x++;
-
+ ile++;
 znaki_odebrane[licznik3]=SBUF;
 
 //if (znaki_odebrane[0]=='G'&&znaki_odebrane[1]=='E'&&znaki_odebrane[2]=='T')
 //LED=0;
 licznik3++;
  	if(licznik3==12){
-//	licznik3=0;//tablica char ma wielkoœæ = 8
+//ERROR
+
        zerowanieodbioru();
 	}
 	if(znaki_odebrane[0]=='E'&&znaki_odebrane[1]=='D'&&znaki_odebrane[2]=='I'&&znaki_odebrane[3]=='T'){
@@ -519,7 +533,6 @@ licznik3++;
 	zerowanieodbioru();
 	}
 
-	SET();
 }
 
 void GET()
@@ -583,57 +596,12 @@ void zerowanieodbioru()
 	znaki_odebrane[10]='-';
 	znaki_odebrane[11]='-';
 
-
-	//znaki_odebrane[14]='-';
-	//i liczniki
+	ile=0;
 	licznik3=0;
+
 
 	licznik2=0;
 	pomock=0;
-}
-
-  void _KB()
-  {
-   
- if(*buf_CSKB1!=key)
-   pom3=0;
-
- key=*buf_CSKB1; //wczytujemy co jest wciœniête
-
-if(key==0b01111111&&pom3==0)// F  bit7   ENTER
-  {
-  	LED^=1;
-    pom3=1;
-   }
-
- if(key==0b10111111&&pom3==0)// E  bit 6 ESC
-  {
-
-    pom3=1;
-   }
-else
-   if(key==0b11011111&&pom3==0)// dó³ bit 5
-  {
-
-    pom3=1;
-   }
- else
-   if(key==0b11101111&&pom3==0)//   góra dbit 4
-  {
-    pom3=1;
-   }
- else
-   if(key==0b11110111&&pom3==0)//   prawo  bit 3
-  {
-
-
-    pom3=1;
-   }
- else
-   if(key==0b11111011&&pom3==0)// lewo   bit 2
-  {
-    pom3=1;
-   }
 
 }
 
