@@ -10,16 +10,17 @@ __sbit __at (0x96) seg;
 __sbit __at (0XB5) T1;
 __bit recflag=0; // flaga odebrania znaku
 __bit sendflag=0; // dane gotowe do transmisji
+__bit pomock=0;
 
 
 __bit t0_flag=0,t0_flag1=0 ;//flag 1 do migania w trybie edycji
 unsigned char indeks = 0,ktoryedytowany=0;// do wyœwietlacza
 unsigned int licznik=0,pom=0,wyswietlana =0;
 unsigned int indeks1=0,i=0,in=0,cotrzy=0;
-
-int pom3 = 0 ,pomock=0, pom2= 0,licznik2=0,licznik3=0;
+unsigned char doseta=0;
+int pom3 = 0 , pom2= 0,licznik2=0,licznik3=0,x=0;
 __code unsigned char Cyfry[10]= {0b0111111, 0b0000110, 0b1011011, 0b1001111, 0b1100110, 0b1101101, 0b1111101, 0b0000111, 0b1111111, 0b1101111};
-__data unsigned char trybedycji[6] = {0,0,0,0,0,0};//hhmmss
+ unsigned char trybedycji[6] = {0,0,0,0,0,0};//hhmmss     //równie¿ do wyslania aktualnego czasu
 __data unsigned char liczbystartowe[6] = {0,0,0,0,0,0};//hhmmss
 __data unsigned char klawmultipleks[6] = {0,0,0,0,0,0};//enter,esc,r,u,d,l
 
@@ -27,7 +28,9 @@ __xdata unsigned char* buf_CSDB = (__xdata unsigned char*) 0xff38;
 __xdata unsigned char* buf_CSDS = (__xdata unsigned char*) 0xFF30;
 __xdata unsigned char * buf_CSKB0 = (__xdata unsigned char*) 0xff21;
 __xdata unsigned char * buf_CSKB1 = (__xdata unsigned char*) 0xff22;
-unsigned char znaki_odebrane[14];
+unsigned char znaki_odebrane[12];
+unsigned int licznikget=0,licznikset=0;
+
 void t0_int(void) __interrupt(1);
 void INIT();
 void _7SEG_REFRESH();  //odœwierzanie wyœwietlacza
@@ -38,7 +41,9 @@ void OBSLUGA();  //zmiany wartoœci w trybie edycji
 void sio_int(void) __interrupt(4);
 void rec();
 void send();
-
+void GET();
+void SET();
+void zerowanieodbioru();
 
 void main()
 {
@@ -48,7 +53,8 @@ INIT();
 
 while(1)
 {
- if(recflag==1&&sendflag==0){
+	GET();
+ if(recflag){
   recflag=0;
   rec();
   }
@@ -57,6 +63,7 @@ while(1)
   send();
    if(t0_flag)
 {   t0_flag=0;
+
 
 TIME();
 
@@ -97,7 +104,6 @@ TF1 = 0;  // po przepe³nieniu ustawia 1(flaga)
 
 ES=1;
 EA=1;
-
 }
 
 void TIME()
@@ -216,17 +222,34 @@ OBSLUGA();
 
 void OBSLUGA()
 {
+
 	in=0;
 //if((in==0b00100000)||(in==0b00000100))
 //{
 EA = 0;	//wy³¹czenie przerwañ
-trybedycji[0]=liczbystartowe[0]; //zapisanie wartoœci
-trybedycji[1]=liczbystartowe[1];
-trybedycji[2]=liczbystartowe[2];
-trybedycji[3]=liczbystartowe[3];
-trybedycji[4]=liczbystartowe[4];
-trybedycji[5]=liczbystartowe[5];
-ktoryedytowany=0;//wyœwietlacz edytowany(albo raczej 2 sekundy 2 min 2 h)
+if(doseta==1)
+{
+trybedycji[5]=(znaki_odebrane[3]-48);
+trybedycji[4]=(znaki_odebrane[4]-48);
+
+trybedycji[3]=(znaki_odebrane[6]-48);
+trybedycji[2]=(znaki_odebrane[7]-48);
+
+trybedycji[1]=(znaki_odebrane[9]-48);
+trybedycji[0]=(znaki_odebrane[10]-48);
+
+}
+
+else {
+trybedycji[5]=liczbystartowe[0]; //zapisanie wartoœci
+trybedycji[4]=liczbystartowe[1];
+trybedycji[3]=liczbystartowe[2];
+trybedycji[2]=liczbystartowe[3];
+trybedycji[1]=liczbystartowe[4];
+trybedycji[0]=liczbystartowe[5];
+}
+ktoryedytowany=0;//wyœwietlacz edytowany(albo raczej po 2( 2 sekundy 2 min 2 h)
+
 
 //}
 
@@ -280,7 +303,7 @@ in=indeks1;
 	 }
 
 
-if(in==0b00000001)  //enter - akceptuje zmianê i opuszcza tryb edycji czasu, zegarek wznawia pracê korzystaj¹c ze zmodyfikowanych wartoœci.
+if(in==0b00000001||doseta==1)  //enter - akceptuje zmianê i opuszcza tryb edycji czasu, zegarek wznawia pracê korzystaj¹c ze zmodyfikowanych wartoœci.
 {
 
 liczbystartowe[0]=trybedycji[0]; //zapisanie wartoœci
@@ -289,6 +312,7 @@ liczbystartowe[2]=trybedycji[2];
 liczbystartowe[3]=trybedycji[3];
 liczbystartowe[4]=trybedycji[4];
 liczbystartowe[5]=trybedycji[5];
+doseta=0;
 TL0 = 0;
 TH0 = 253;
 EA = 1;
@@ -296,6 +320,7 @@ EA = 1;
  //wyjœcie z trybu edycji
 }
 if(in==0b00000010) { //ESC opuszcza tryb edycji czasu, a zegarek wznawia pracê od momentu w którym rozpoczêto edycjê.
+
 TH0 = 253;
 TL0 = 0;
 EA = 1;
@@ -457,11 +482,11 @@ ktoryedytowany++;
 
  void sio_int(void) __interrupt(4)
 {
-if (TI)   {  //jeœli wys³ano ju¿
+if (TI)   {  //jeœli odebrano
 TI = 0;  //zerowanie flagi wysy³ania
 
 	  }
-if(RI){
+else   {
 RI =0;      //zerowanie flagi odbioru
 recflag =1 ;   //ustawienie flagi odebrania
 	}
@@ -469,43 +494,110 @@ recflag =1 ;   //ustawienie flagi odebrania
 
 void send()
 {
-
-
 if(TI)
 return;
- while(pomock!=300)  // fragment spowolnienia dla symulatora by dawa³ rade
-pomock++;           //
-pomock=0;           //
+   x=0;
+   while(x!=300)
+   x++;
 
+sendflag=0;
 SBUF=znaki_odebrane[licznik2];
+
 licznik2++;
-//sendflag=0;
-	if(licznik2==14){
-	licznik2=0;//tablica char ma wielkoœæ = 8
-	sendflag=0;
- }
+
+	if(licznik2==8)
+	{
+	zerowanieodbioru();
+ licznik2=0;
 	}
+}
+
 void rec()
 {
-//while(pomock!=300)  // fragment spowolnienia dla symulatora by dawa³ rade
-//pomock++;           //
-//pomock=0;
+//x=0;
+//while(x!=300)
+//x++;
+
 znaki_odebrane[licznik3]=SBUF;
 
 //if (znaki_odebrane[0]=='G'&&znaki_odebrane[1]=='E'&&znaki_odebrane[2]=='T')
 //LED=0;
 licznik3++;
- 	if(licznik3==14){
-	licznik3=0;//tablica char ma wielkoœæ = 8
-        sendflag=1;
+ 	if(licznik3==12){
+//	licznik3=0;//tablica char ma wielkoœæ = 8
+       zerowanieodbioru();
 	}
-	if(znaki_odebrane[0]=='E'&&znaki_odebrane[1]=='D'&&znaki_odebrane[2]=='I'&&znaki_odebrane[3]=='T') 
+	if(znaki_odebrane[0]=='E'&&znaki_odebrane[1]=='D'&&znaki_odebrane[2]=='I'&&znaki_odebrane[3]=='T'){
 	OBSLUGA();
+	zerowanieodbioru();
+	}
+
+	SET();
+}
+
+void GET()
+{
+if(pomock==0&&znaki_odebrane[0]=='G'&&znaki_odebrane[1]=='E'&&znaki_odebrane[2]=='T')
+{
+	znaki_odebrane[7]=liczbystartowe[0]+48;
+	znaki_odebrane[6]=liczbystartowe[1]+48;
+	znaki_odebrane[5]='.';
+	znaki_odebrane[4]=liczbystartowe[2]+48;
+	znaki_odebrane[3]=liczbystartowe[3]+48;
+	znaki_odebrane[2]='.';
+	znaki_odebrane[1]=liczbystartowe[4]+48;
+	znaki_odebrane[0]=liczbystartowe[5]+48;
+pomock=1;
+
+}
+if(pomock)
+sendflag=1;
+
 
 
 }
 
+void SET()
+{
+if(znaki_odebrane[0]=='S'&&znaki_odebrane[1]=='E'&&znaki_odebrane[2]=='T'
+&&znaki_odebrane[3]-48>=0&&znaki_odebrane[3]-48<=2
+&&znaki_odebrane[4]-48>=0&&znaki_odebrane[4]-48<=9
+&&znaki_odebrane[5]=='.'
+&&znaki_odebrane[6]-48>=0&&znaki_odebrane[6]-48<=5
+&&znaki_odebrane[7]-48>=0&&znaki_odebrane[7]-48<=9
+&&znaki_odebrane[8]=='.'
+&&znaki_odebrane[9]-48>=0&&znaki_odebrane[9]-48<=5
+&&znaki_odebrane[10]-48>=0&&znaki_odebrane[10]-48<=9 ){
+doseta=1;
 
+OBSLUGA();
+zerowanieodbioru();
+
+}
+}
+void zerowanieodbioru()
+{
+	znaki_odebrane[0]='-';
+	znaki_odebrane[1]='-';
+	znaki_odebrane[2]='-';
+	znaki_odebrane[3]='-';
+	znaki_odebrane[4]='-';
+	znaki_odebrane[5]='-';
+	znaki_odebrane[6]='-';
+	znaki_odebrane[7]='-';
+	znaki_odebrane[9]='-';
+	znaki_odebrane[10]='-';
+	znaki_odebrane[11]='-';
+
+
+	//znaki_odebrane[14]='-';
+	//i liczniki
+	licznik3=0;
+	licznikget=0;
+	licznikset=0;
+	licznik2=0;
+	pomock=0;
+}
 
 
 
