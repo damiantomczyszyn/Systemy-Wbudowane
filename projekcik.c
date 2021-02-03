@@ -1,6 +1,9 @@
 //Prêdkoœæ 4800
-
-
+//Polecenie SET - ‘SET00.00.01’ bez spacji pomiêdzy i enetra na koñcu
+//GET bez enetra na koñcu
+//EDIT bez enetra na koñcu
+// Klawiatura multipleksowana dzia³a i obs³uguje kilka klawiszy jednoczeœnie
+//
 
 #include <8051.h>
 __bit __at(0x97) LED;
@@ -29,7 +32,7 @@ __xdata unsigned char* buf_CSDS = (__xdata unsigned char*) 0xFF30;
 __xdata unsigned char * buf_CSKB0 = (__xdata unsigned char*) 0xff21;
 __xdata unsigned char * buf_CSKB1 = (__xdata unsigned char*) 0xff22;
 unsigned char znaki_odebrane[12];
-unsigned int licznikget=0,licznikset=0;
+
 
 void t0_int(void) __interrupt(1);
 void INIT();
@@ -73,6 +76,9 @@ TIME();
 
 
 
+
+
+
 KLAW_MULT();
 }//koniec while
 
@@ -104,6 +110,7 @@ TF1 = 0;  // po przepe³nieniu ustawia 1(flaga)
 
 ES=1;
 EA=1;
+
 }
 
 void TIME()
@@ -222,34 +229,17 @@ OBSLUGA();
 
 void OBSLUGA()
 {
-
 	in=0;
 //if((in==0b00100000)||(in==0b00000100))
 //{
 EA = 0;	//wy³¹czenie przerwañ
-if(doseta==1)
-{
-trybedycji[5]=(znaki_odebrane[3]-48);
-trybedycji[4]=(znaki_odebrane[4]-48);
-
-trybedycji[3]=(znaki_odebrane[6]-48);
-trybedycji[2]=(znaki_odebrane[7]-48);
-
-trybedycji[1]=(znaki_odebrane[9]-48);
-trybedycji[0]=(znaki_odebrane[10]-48);
-
-}
-
-else {
-trybedycji[5]=liczbystartowe[0]; //zapisanie wartoœci
-trybedycji[4]=liczbystartowe[1];
-trybedycji[3]=liczbystartowe[2];
-trybedycji[2]=liczbystartowe[3];
-trybedycji[1]=liczbystartowe[4];
-trybedycji[0]=liczbystartowe[5];
-}
-ktoryedytowany=0;//wyœwietlacz edytowany(albo raczej po 2( 2 sekundy 2 min 2 h)
-
+trybedycji[0]=liczbystartowe[0]; //zapisanie wartoœci
+trybedycji[1]=liczbystartowe[1];
+trybedycji[2]=liczbystartowe[2];
+trybedycji[3]=liczbystartowe[3];
+trybedycji[4]=liczbystartowe[4];
+trybedycji[5]=liczbystartowe[5];
+ktoryedytowany=0;//wyœwietlacz edytowany(albo raczej 2 sekundy 2 min 2 h)
 
 //}
 
@@ -303,7 +293,7 @@ in=indeks1;
 	 }
 
 
-if(in==0b00000001||doseta==1)  //enter - akceptuje zmianê i opuszcza tryb edycji czasu, zegarek wznawia pracê korzystaj¹c ze zmodyfikowanych wartoœci.
+if(in==0b00000001)  //enter - akceptuje zmianê i opuszcza tryb edycji czasu, zegarek wznawia pracê korzystaj¹c ze zmodyfikowanych wartoœci.
 {
 
 liczbystartowe[0]=trybedycji[0]; //zapisanie wartoœci
@@ -312,7 +302,6 @@ liczbystartowe[2]=trybedycji[2];
 liczbystartowe[3]=trybedycji[3];
 liczbystartowe[4]=trybedycji[4];
 liczbystartowe[5]=trybedycji[5];
-doseta=0;
 TL0 = 0;
 TH0 = 253;
 EA = 1;
@@ -320,7 +309,6 @@ EA = 1;
  //wyjœcie z trybu edycji
 }
 if(in==0b00000010) { //ESC opuszcza tryb edycji czasu, a zegarek wznawia pracê od momentu w którym rozpoczêto edycjê.
-
 TH0 = 253;
 TL0 = 0;
 EA = 1;
@@ -479,7 +467,6 @@ ktoryedytowany++;
 }
 }
 
-
  void sio_int(void) __interrupt(4)
 {
 if (TI)   {  //jeœli odebrano
@@ -568,9 +555,16 @@ if(znaki_odebrane[0]=='S'&&znaki_odebrane[1]=='E'&&znaki_odebrane[2]=='T'
 &&znaki_odebrane[8]=='.'
 &&znaki_odebrane[9]-48>=0&&znaki_odebrane[9]-48<=5
 &&znaki_odebrane[10]-48>=0&&znaki_odebrane[10]-48<=9 ){
-doseta=1;
+// EA=0;
+liczbystartowe[5]=(znaki_odebrane[3]-48);
+liczbystartowe[4]=(znaki_odebrane[4]-48);
 
-OBSLUGA();
+liczbystartowe[3]=(znaki_odebrane[6]-48);
+liczbystartowe[2]=(znaki_odebrane[7]-48);
+
+liczbystartowe[1]=(znaki_odebrane[9]-48);
+liczbystartowe[0]=(znaki_odebrane[10]-48);
+//				      EA=1;
 zerowanieodbioru();
 
 }
@@ -593,8 +587,7 @@ void zerowanieodbioru()
 	//znaki_odebrane[14]='-';
 	//i liczniki
 	licznik3=0;
-	licznikget=0;
-	licznikset=0;
+
 	licznik2=0;
 	pomock=0;
 }
