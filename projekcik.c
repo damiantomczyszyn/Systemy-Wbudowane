@@ -3,7 +3,7 @@
 //GET bez enetra na koñcu
 //EDIT bez enetra na koñcu
 // Klawiatura multipleksowana dzia³a i obs³uguje kilka klawiszy jednoczeœnie
-//
+// 
 
 #include <8051.h>
 __bit __at(0x97) LED;
@@ -15,7 +15,7 @@ __bit recflag=0; // flaga odebrania znaku
 __bit sendflag=0; // dane gotowe do transmisji
 __bit pomock=0;
 
-
+unsigned char key;//stan klawiatury
 __bit t0_flag=0,t0_flag1=0 ;//flag 1 do migania w trybie edycji
 unsigned char indeks = 0,ktoryedytowany=0;// do wyœwietlacza
 unsigned int licznik=0,pom=0,wyswietlana =0;
@@ -592,6 +592,49 @@ void zerowanieodbioru()
 	pomock=0;
 }
 
+  void _KB()
+  {
+   
+ if(*buf_CSKB1!=key)
+   pom3=0;
 
+ key=*buf_CSKB1; //wczytujemy co jest wciœniête
+
+if(key==0b01111111&&pom3==0)// F  bit7   ENTER
+  {
+  	LED^=1;
+    pom3=1;
+   }
+
+ if(key==0b10111111&&pom3==0)// E  bit 6 ESC
+  {
+
+    pom3=1;
+   }
+else
+   if(key==0b11011111&&pom3==0)// dó³ bit 5
+  {
+
+    pom3=1;
+   }
+ else
+   if(key==0b11101111&&pom3==0)//   góra dbit 4
+  {
+    pom3=1;
+   }
+ else
+   if(key==0b11110111&&pom3==0)//   prawo  bit 3
+  {
+
+
+    pom3=1;
+   }
+ else
+   if(key==0b11111011&&pom3==0)// lewo   bit 2
+  {
+    pom3=1;
+   }
+
+}
 
 
