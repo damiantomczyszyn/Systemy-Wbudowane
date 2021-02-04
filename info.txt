@@ -1,0 +1,8 @@
+//Prêdkoœæ 4800
+// W trybie edycji edytowana wartoœæ ma inn¹ jasnoœæ
+//Polecenie SET - ‘SET00.00.01’ bez spacji pomiêdzy i bez enetra na koñcu
+//GET z enterem
+//EDIT z enterem
+// Klawiatura multipleksowana dzia³a i obs³uguje kilka klawiszy jednoczeœnie
+// Wykonane zadania zad1,zad2,zad3,zad4
+// Jeœli jest b³¹d w wpisaniu polecenia po max 2s program jest przygotowany na wpisanie poprawnego polecenia
