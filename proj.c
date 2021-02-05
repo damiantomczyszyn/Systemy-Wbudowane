@@ -1,0 +1,312 @@
+
+
+
+#include <8051.h>
+__bit __at(0x97) LED;
+
+__bit __at(0xB5) kbt1;//p3.5
+__sbit __at (0x96) seg;
+__sbit __at (0XB5) T1;
+
+
+__bit recflag=0; // flaga odebrania znaku
+__bit sendflag=0; // dane gotowe do transmisji
+__bit migflag=0;
+__bit edycja=0;
+unsigned char indeks = 0,ktoryedytowany=0;
+unsigned int licznik=0,wyswietlana =0;
+unsigned int indeks1=0;
+
+int pom3 = 0 , pom2= 0;
+unsigned int licznik2=0,licznik3=0;
+short int x=0;
+__code unsigned char Cyfry[10]= {0b0111111, 0b0000110, 0b1011011, 0b1001111, 0b1100110, 0b1101101, 0b1111101, 0b0000111, 0b1111111, 0b1101111};
+__data unsigned char trybedycji[6] = {0,0,0,0,0,0};//hhmmss     //równie¿ do wyslania aktualnego czasu
+__data unsigned char liczbystartowe[6] = {0,0,0,0,0,0};//hhmmss
+//__data unsigned char klawmultipleks[6] = {0,0,0,0,0,0};//enter,esc,r,u,d,l
+unsigned char klawmultiplekss=0;
+
+__xdata unsigned char* buf_CSDB = (__xdata unsigned char*) 0xff38;
+__xdata unsigned char* buf_CSDS = (__xdata unsigned char*) 0xFF30;
+__xdata unsigned char * buf_CSKB0 = (__xdata unsigned char*) 0xff21;
+__xdata unsigned char * buf_CSKB1 = (__xdata unsigned char*) 0xff22;
+unsigned char i=0;
+
+__bit t0_flag1=0 ;//flag 1 do migania w trybie edycji
+
+
+
+void _7SEG_REFRESH()
+{ 
+
+indeks=0b00000001;
+wyswietlana = 0;
+
+
+	while(wyswietlana!=6)
+	{
+
+ 	if(edycja&&ktoryedytowany==0&&migflag==0) {   //sekundy  TRYB EDYCJi
+	    if(wyswietlana==0||wyswietlana==1){
+	    	wyswietlana=2;
+
+		
+		}  }
+		      //podstawowe wyœwietlanie
+
+		*buf_CSDS = indeks;
+		*buf_CSDB = Cyfry[liczbystartowe[wyswietlana]];
+                seg = 0; //w³¹cz
+
+                seg = 1;  //wy³¹cz
+
+            	wyswietlana++;
+            	indeks = indeks << 1;
+
+            	//seg = 0;  //w³¹cz
+        }
+	
+	 }
+
+
+
+ void t0_int(void) __interrupt(1) // musi byæ 120-300 na sekunde
+{
+	licznik++ ;
+//	if(licznik==800)
+        //  migflag^=1;
+	if(licznik == 1200)  {
+	  licznik = 0;
+           migflag^=1;
+
+
+	t0_flag1 = 1;             }
+           TH0 = 253;
+         //  if(edycja==0)
+	  _7SEG_REFRESH();//odœwierzanie tutaj
+
+}
+
+
+
+void INIT()
+{
+
+TMOD=0b00100001;//T1 off, T0-16bit
+TR0=1;
+TL0=0b00000000;
+TH0 = 253;//pocz¹tkowa wartoœæ licznika
+TF0 = 0;
+
+ET0 = 1;
+//EA = 1;
+
+//t1
+SCON=0b01010000;
+TMOD&=0b00101111;
+TMOD|=0b00100000;
+TL1=0xFA;
+TH1=0xFA;
+PCON&=0b01111111;
+TR1=1;  //zgoda na zliczanie przez T1
+TF1 = 0;  // po przepe³nieniu ustawia 1(flaga)
+
+
+ES=1;
+EA=1;
+
+}
+
+void TIME()
+{
+
+	if (liczbystartowe[0]+1==10)          // jeœli 1 zanak sek przeskakuje na 10 to
+	{
+	liczbystartowe[0]=0;          //zmieñ go na zero      kk
+
+	if(liczbystartowe[1]+1==6)            //i jeœli w tym czasie przeskakuje 2gi znak sek to zmieñ go na zero kk
+	{
+		liczbystartowe[1]=0;
+
+        if (liczbystartowe[2]+1==10)          // jeœli 1 zanak min przeskakuje na 10 to
+	{
+		liczbystartowe[2]=0;          //zmieñ go na zero
+
+	if(liczbystartowe[3]+1==6)            //i jeœli w tym czasie przeskakuje 2gi znak min to zmieñ go na zero
+	{
+		liczbystartowe[3]=0;
+		
+
+	if((liczbystartowe[4]+1==4) &&( liczbystartowe[5]==2))//jeœli przeskakuje na 24 to godzina = 00
+	{
+          liczbystartowe[4]=0 ;
+          liczbystartowe[5]=0 ;
+	}
+	else                  //jeœli nie to
+
+
+	if (liczbystartowe[4]+1==10)          // jeœli 1 zanak godz przeskakuje na 10 to jeœli przeskakuje na 4 to sprawdz czy nie ma 23
+	{
+		liczbystartowe[4]=0;          //zmieñ go na zero
+	        liczbystartowe[5]++;           //oraz zwiêksz 2gi znak godziny
+ 	}
+
+	else
+	liczbystartowe[4]++;         //gdy przeskakuje pierwszy znak godz bez przepe³nienia
+
+
+
+	}
+	else     // gdy przeskakuje 2gi znak sek   bez przepe³nienia
+	liczbystartowe[3]++;
+
+
+	}
+	else
+	liczbystartowe[2]++;         //gdy przeskakuje pierwszy znak sek bez przepe³nienia
+
+
+	}
+	else     // gdy przeskakuje 2gi znak sek   bez przepe³nienia
+	liczbystartowe[1]++;
+
+ }
+	else                                                                     // kk
+	liczbystartowe[0]++;         //gdy przeskakuje pierwszy znak sek bez przepe³nienia
+
+}
+
+
+
+void OBSLUGA()
+{
+edycja=1;      //flagatrybuedycji
+trybedycji[0]=liczbystartowe[0]; //zapisanie wartoœci
+trybedycji[1]=liczbystartowe[1];
+trybedycji[2]=liczbystartowe[2];
+trybedycji[3]=liczbystartowe[3];
+trybedycji[4]=liczbystartowe[4];
+trybedycji[5]=liczbystartowe[5];
+ktoryedytowany=0;
+while(1)  //trybedycjiu
+{
+indeks1=0b00000001;
+i = 0;
+//EA=0;//wy³
+
+while(i!=6)
+	{
+	EA=0;//wy³
+*buf_CSDS = indeks1;
+
+if(klawmultiplekss!=0) //jeœli cos jest klikniête sprawdzamy czy zosta³o odklikniête
+{
+if((klawmultiplekss&0b00000001)==(indeks1)&&kbt1==0)//odklikniêty
+klawmultiplekss&=0b11111110;
+
+if((klawmultiplekss&0b00000010)==(indeks1)&&kbt1==0)//odklikniêty
+klawmultiplekss&=0b11111101;
+
+if((klawmultiplekss&0b00000100)==(indeks1)&&kbt1==0)//odklikniêty
+klawmultiplekss&=0b11111011;
+
+if((klawmultiplekss&0b00001000)==(indeks1)&&kbt1==0)//odklikniêty
+klawmultiplekss&=0b11110111;
+
+if((klawmultiplekss&0b00010000)==(indeks1)&&kbt1==0)//odklikniêty
+klawmultiplekss&=0b11101111;
+
+if((klawmultiplekss&0b00100000)==(indeks1)&&kbt1==0)//odklikniêty
+klawmultiplekss&=0b11011111;
+} else//jeœli ==0 to nic nie jest wciœniête i mo¿emy coœ przycisn¹æ
+{
+
+
+if(indeks1==    0b00000001&&kbt1==1){  //wciœniêty  enter
+klawmultiplekss=0b00000001;
+LED^=1;           }
+
+if(indeks1==    0b00000010&&kbt1==1){  //wciœniêty  ESC
+klawmultiplekss=0b00000010;
+LED^=1;           }
+
+if(indeks1==    0b00000100&&kbt1==1){  //wciœniêty    PRAWO
+klawmultiplekss=0b00000100;
+LED^=1;           }
+
+if(indeks1==    0b00001000&&kbt1==1){  //wciœniêty     GÓRA
+klawmultiplekss=0b00001000;
+LED^=1;           }
+
+if(indeks1==    0b00010000&&kbt1==1){  //wciœniêty     DÓ£
+klawmultiplekss=0b00010000;
+LED^=1;           }
+
+
+if(indeks1==    0b00100000&&kbt1==1){  //wciœniêty       LEWO
+klawmultiplekss=0b00100000;
+LED^=1;           }
+
+
+
+
+}
+
+
+indeks1 = indeks1 << 1;
+i++;
+ }
+
+EA=1;//w³
+
+}
+
+}  //koniec tr edycji-obsluga
+
+
+
+
+
+void KLAW_MULT()// badanie lewo prawo czy wejsc w tryb edycji
+{
+indeks1=0b00000001;
+ i = 0;
+while(i!=6)
+	{
+*buf_CSDS = indeks1;
+
+//EA=0;
+if(klawmultiplekss==0);
+if((indeks1==0b00000100||indeks1==0b00100000)&&kbt1==1)//klikniêty   LEWO  LUB PRAWO TO TRYB EDYCJI   //czyli edycja ale zapamietujemy co wcisniete
+{
+klawmultiplekss=indeks1;
+OBSLUGA();//trybedycji
+ }
+indeks1 = indeks1 << 1;
+i++;
+
+}
+}
+
+
+void main()
+{
+	
+INIT();
+	
+	
+	
+while(1)
+{
+if(t0_flag1)
+{
+t0_flag1=0;
+TIME();
+}
+KLAW_MULT();
+}
+
+
+
+}
+
