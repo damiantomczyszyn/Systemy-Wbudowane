@@ -17,8 +17,8 @@ unsigned char indeks = 0,ktoryedytowany=0;
 unsigned int licznik=0,wyswietlana =0;
 unsigned int indeks1=0;
 
-int pom3 = 0 , pom2= 0;
-unsigned int licznik2=0,licznik3=0;
+
+unsigned char licznik2=0;
 short int x=0;
 __code unsigned char Cyfry[10]= {0b0111111, 0b0000110, 0b1011011, 0b1001111, 0b1100110, 0b1101101, 0b1111101, 0b0000111, 0b1111111, 0b1101111};
 __data unsigned char trybedycji[6] = {0,0,0,0,0,0};//hhmmss     //równie¿ do wyslania aktualnego czasu
@@ -41,17 +41,26 @@ void _7SEG_REFRESH()
 
 indeks=0b00000001;
 wyswietlana = 0;
+;
 
 
-	while(wyswietlana!=6)
+	while(indeks!=0b01000000)
 	{
 
- 	if(edycja&&ktoryedytowany==0&&migflag==0) {   //sekundy  TRYB EDYCJi
-	    if(wyswietlana==0||wyswietlana==1){
-	    	wyswietlana=2;
+ 	if(edycja&&migflag==0) {   //sekundy  TRYB EDYCJi
+  if((wyswietlana==0||wyswietlana==1)&&ktoryedytowany==0)
+	    	indeks=0b00000100 ;
+
+  if((wyswietlana==2||wyswietlana==3)&&ktoryedytowany==1)
+indeks=0b00010000  ;
+		    
+  if((wyswietlana==4||wyswietlana==5)&&ktoryedytowany==2)
+	    	break;
+
+
 
 		
-		}  }
+		  }
 		      //podstawowe wyœwietlanie
 
 		*buf_CSDS = indeks;
@@ -61,6 +70,7 @@ wyswietlana = 0;
                 seg = 1;  //wy³¹cz
 
             	wyswietlana++;
+
             	indeks = indeks << 1;
 
             	//seg = 0;  //w³¹cz
@@ -188,6 +198,8 @@ trybedycji[3]=liczbystartowe[3];
 trybedycji[4]=liczbystartowe[4];
 trybedycji[5]=liczbystartowe[5];
 ktoryedytowany=0;
+TH0 = 253;
+licznik=0;
 while(1)  //trybedycjiu
 {
 indeks1=0b00000001;
@@ -197,6 +209,7 @@ i = 0;
 while(i!=6)
 	{
 	EA=0;//wy³
+
 *buf_CSDS = indeks1;
 
 if(klawmultiplekss!=0) //jeœli cos jest klikniête sprawdzamy czy zosta³o odklikniête
