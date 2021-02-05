@@ -13,6 +13,7 @@ __bit recflag=0; // flaga odebrania znaku
 __bit sendflag=0; // dane gotowe do transmisji
 __bit migflag=0;
 __bit edycja=0;
+__bit nieodsw=1;
 unsigned char indeks = 0,ktoryedytowany=0;
 unsigned int licznik=0,wyswietlana =0;
 unsigned int indeks1=0;
@@ -93,6 +94,7 @@ indeks=0b00010000  ;
 	t0_flag1 = 1;             }
            TH0 = 253;
          //  if(edycja==0)
+         if(nieodsw)
 	  _7SEG_REFRESH();//odœwierzanie tutaj
 
 }
@@ -109,7 +111,7 @@ TH0 = 253;//pocz¹tkowa wartoœæ licznika
 TF0 = 0;
 
 ET0 = 1;
-//EA = 1;
+
 
 //t1
 SCON=0b01010000;
@@ -204,12 +206,13 @@ while(1)  //trybedycjiu
 {
 indeks1=0b00000001;
 i = 0;
-//EA=0;//wy³
+
 
 while(i!=6)
 	{
-	EA=0;//wy³
 
+
+ nieodsw=0;
 *buf_CSDS = indeks1;
 
 if(klawmultiplekss!=0) //jeœli cos jest klikniête sprawdzamy czy zosta³o odklikniête
@@ -231,20 +234,48 @@ klawmultiplekss&=0b11101111;
 
 if((klawmultiplekss&0b00100000)==(indeks1)&&kbt1==0)//odklikniêty
 klawmultiplekss&=0b11011111;
+nieodsw=1;
 } else//jeœli ==0 to nic nie jest wciœniête i mo¿emy coœ przycisn¹æ
 {
 
 
 if(indeks1==    0b00000001&&kbt1==1){  //wciœniêty  enter
 klawmultiplekss=0b00000001;
-LED^=1;           }
+LED^=1;          
+//enter wznawia prace na edytowanych wartoœciach
+TL0 = 0;
+TH0 = 253;
+licznik = 0;
+edycja=0;
+nieodsw=1;
+
+break;
+
+
+ }
 
 if(indeks1==    0b00000010&&kbt1==1){  //wciœniêty  ESC
 klawmultiplekss=0b00000010;
-LED^=1;           }
+liczbystartowe[0]=trybedycji[0]; //zapisanie wartoœci
+liczbystartowe[1]=trybedycji[1];
+liczbystartowe[2]=trybedycji[2];
+liczbystartowe[3]=trybedycji[3];
+liczbystartowe[4]=trybedycji[4];
+liczbystartowe[5]=trybedycji[5];
+LED^=1;           
+TH0 = 253;
+TL0 = 0;
+licznik = 0;
+nieodsw=1;
+
+break;
+}
 
 if(indeks1==    0b00000100&&kbt1==1){  //wciœniêty    PRAWO
 klawmultiplekss=0b00000100;
+
+if(ktoryedytowany!=0)
+ktoryedytowany--;
 LED^=1;           }
 
 if(indeks1==    0b00001000&&kbt1==1){  //wciœniêty     GÓRA
@@ -258,19 +289,22 @@ LED^=1;           }
 
 if(indeks1==    0b00100000&&kbt1==1){  //wciœniêty       LEWO
 klawmultiplekss=0b00100000;
-LED^=1;           }
+LED^=1;          
+if(ktoryedytowany!=2)// bo maj¹ po 2 wyœwietlacze sie edytowaæ sekundyx2 min x2 h x2
+ktoryedytowany++;
+ }
 
 
 
-
+nieodsw=1;
 }
 
 
 indeks1 = indeks1 << 1;
 i++;
  }
+nieodsw=1;
 
-EA=1;//w³
 
 }
 
@@ -284,8 +318,10 @@ void KLAW_MULT()// badanie lewo prawo czy wejsc w tryb edycji
 {
 indeks1=0b00000001;
  i = 0;
+
 while(i!=6)
 	{
+nieodsw=0;
 *buf_CSDS = indeks1;
 
 //EA=0;
@@ -293,12 +329,16 @@ if(klawmultiplekss==0);
 if((indeks1==0b00000100||indeks1==0b00100000)&&kbt1==1)//klikniêty   LEWO  LUB PRAWO TO TRYB EDYCJI   //czyli edycja ale zapamietujemy co wcisniete
 {
 klawmultiplekss=indeks1;
+
+nieodsw=1;
 OBSLUGA();//trybedycji
  }
+ nieodsw=1;
 indeks1 = indeks1 << 1;
 i++;
 
 }
+nieodsw=1;
 }
 
 
