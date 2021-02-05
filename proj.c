@@ -26,7 +26,7 @@ __data unsigned char trybedycji[6] = {0,0,0,0,0,0};//hhmmss     //równie¿ do wys
 __data unsigned char liczbystartowe[6] = {0,0,0,0,0,0};//hhmmss
 //__data unsigned char klawmultipleks[6] = {0,0,0,0,0,0};//enter,esc,r,u,d,l
 unsigned char klawmultiplekss=0;
-
+unsigned char y=0;
 __xdata unsigned char* buf_CSDB = (__xdata unsigned char*) 0xff38;
 __xdata unsigned char* buf_CSDS = (__xdata unsigned char*) 0xFF30;
 __xdata unsigned char * buf_CSKB0 = (__xdata unsigned char*) 0xff21;
@@ -49,26 +49,27 @@ wyswietlana = 0;
 	{
 
  	if(edycja&&migflag==0) {   //sekundy  TRYB EDYCJi
-  if((wyswietlana==0||wyswietlana==1)&&ktoryedytowany==0)
+  if((wyswietlana==0||wyswietlana==1)&&ktoryedytowany==0){
 	    	indeks=0b00000100 ;
-
-  if((wyswietlana==2||wyswietlana==3)&&ktoryedytowany==1)
+		wyswietlana=2;   }
+  if((wyswietlana==2||wyswietlana==3)&&ktoryedytowany==1) {
 indeks=0b00010000  ;
-		    
+wyswietlana=4;   }
   if((wyswietlana==4||wyswietlana==5)&&ktoryedytowany==2)
 	    	break;
 
 
 
-		
+
 		  }
 		      //podstawowe wyœwietlanie
-
+                 seg = 1;  //wy³¹cz
 		*buf_CSDS = indeks;
 		*buf_CSDB = Cyfry[liczbystartowe[wyswietlana]];
                 seg = 0; //w³¹cz
-
-                seg = 1;  //wy³¹cz
+	      y=0;
+	 while(y<5)
+	  y++;
 
             	wyswietlana++;
 
@@ -76,9 +77,8 @@ indeks=0b00010000  ;
 
             	//seg = 0;  //w³¹cz
         }
-	
+            seg = 1;  //wy³¹cz
 	 }
-
 
 
  void t0_int(void) __interrupt(1) // musi byæ 120-300 na sekunde
@@ -204,6 +204,17 @@ TH0 = 253;
 licznik=0;
 while(1)  //trybedycjiu
 {
+
+nieodsw=1;
+    y=0;
+ while(y<5)
+  y++;
+nieodsw=0;
+  y=0;
+ while(y<2)
+  y++;
+
+
 indeks1=0b00000001;
 i = 0;
 
@@ -220,25 +231,81 @@ if(klawmultiplekss!=0) //jeœli cos jest klikniête sprawdzamy czy zosta³o odklikn
 if((klawmultiplekss&0b00000001)==(indeks1)&&kbt1==0)//odklikniêty
 klawmultiplekss&=0b11111110;
 
+
+nieodsw=1;
+ y=0;
+ while(y<5)
+  y++;
+nieodsw=0;
+  y=0;
+ while(y<2)
+  y++;
+
 if((klawmultiplekss&0b00000010)==(indeks1)&&kbt1==0)//odklikniêty
 klawmultiplekss&=0b11111101;
+
+nieodsw=1;
+ y=0;
+ while(y<5)
+  y++;
+nieodsw=0;
+  y=0;
+ while(y<2)
+  y++;
 
 if((klawmultiplekss&0b00000100)==(indeks1)&&kbt1==0)//odklikniêty
 klawmultiplekss&=0b11111011;
 
+
+nieodsw=1;
+ y=0;
+ while(y<5)
+  y++;
+nieodsw=0;
+  y=0;
+ while(y<2)
+  y++;
+
+
 if((klawmultiplekss&0b00001000)==(indeks1)&&kbt1==0)//odklikniêty
 klawmultiplekss&=0b11110111;
 
+
+nieodsw=1;
+ y=0;
+ while(y<5)
+  y++;
+nieodsw=0;
+  y=0;
+ while(y<5)
+  y++;
+
 if((klawmultiplekss&0b00010000)==(indeks1)&&kbt1==0)//odklikniêty
 klawmultiplekss&=0b11101111;
+
+
+nieodsw=1;
+ y=0;
+ while(y<5)
+  y++;
+nieodsw=0;
+  y=0;
+ while(y<2)
+  y++;
+
 
 if((klawmultiplekss&0b00100000)==(indeks1)&&kbt1==0)//odklikniêty
 klawmultiplekss&=0b11011111;
 nieodsw=1;
 } else//jeœli ==0 to nic nie jest wciœniête i mo¿emy coœ przycisn¹æ
-{
-
-
+{   nieodsw=1;
+	 y=0;
+ while(y<5)
+  y++;
+ nieodsw=0;
+  y=0;
+ while(y<2)
+  y++;
 if(indeks1==    0b00000001&&kbt1==1){  //wciœniêty  enter
 klawmultiplekss=0b00000001;
 LED^=1;          
@@ -249,7 +316,7 @@ licznik = 0;
 edycja=0;
 nieodsw=1;
 
-break;
+goto wyjdz;
 
 
  }
@@ -267,16 +334,46 @@ TH0 = 253;
 TL0 = 0;
 licznik = 0;
 nieodsw=1;
-
+goto wyjdz;
 break;
 }
+
+
+nieodsw=1;
+ y=0;
+ while(y<5)
+  y++;
+nieodsw=0;
+  y=0;
+ while(y<2)
+  y++;
 
 if(indeks1==    0b00000100&&kbt1==1){  //wciœniêty    PRAWO
 klawmultiplekss=0b00000100;
 
+
+nieodsw=1;
+ y=0;
+ while(y<5)
+  y++;
+nieodsw=0;
+  y=0;
+ while(y<2)
+  y++;
+
 if(ktoryedytowany!=0)
 ktoryedytowany--;
 LED^=1;           }
+
+nieodsw=1;
+ y=0;
+ while(y<5)
+  y++;
+nieodsw=0;
+  y=0;
+ while(y<2)
+  y++;
+
 
 if(indeks1==    0b00001000&&kbt1==1){  //wciœniêty     GÓRA
 klawmultiplekss=0b00001000;
@@ -285,6 +382,17 @@ LED^=1;           }
 if(indeks1==    0b00010000&&kbt1==1){  //wciœniêty     DÓ£
 klawmultiplekss=0b00010000;
 LED^=1;           }
+
+
+nieodsw=1;
+ y=0;
+ while(y<5)
+  y++;
+nieodsw=0;
+  y=0;
+ while(y<2)
+  y++;
+
 
 
 if(indeks1==    0b00100000&&kbt1==1){  //wciœniêty       LEWO
@@ -307,7 +415,7 @@ nieodsw=1;
 
 
 }
-
+wyjdz:
 }  //koniec tr edycji-obsluga
 
 
@@ -321,7 +429,15 @@ indeks1=0b00000001;
 
 while(i!=6)
 	{
+
+nieodsw=1;
+ y=0;
+ while(y<5)
+  y++;
 nieodsw=0;
+  y=0;
+ while(y<5)
+  y++;
 *buf_CSDS = indeks1;
 
 //EA=0;
@@ -333,6 +449,7 @@ klawmultiplekss=indeks1;
 nieodsw=1;
 OBSLUGA();//trybedycji
  }
+ wyjdz:
  nieodsw=1;
 indeks1 = indeks1 << 1;
 i++;
@@ -346,7 +463,7 @@ void main()
 {
 	
 INIT();
-	
+
 	
 	
 while(1)
