@@ -207,7 +207,7 @@ trybedycji[5]=liczbystartowe[5];
 ktoryedytowany=0;
 
 
-
+ 
 
 while(1)  //trybedycjiu
 {
@@ -276,8 +276,8 @@ licznik = 0;
 edycja=0;
 nieodsw=1;
 t0_flag1 = 0;
-//goto wyjdz;
-  break;
+goto wyjdz;
+ // break;
 
  }
 
@@ -301,8 +301,8 @@ nieodsw=1;
 edycja=0;
 
 t0_flag1 = 0;
-//goto wyjdz;
- break;
+goto wyjdz;
+// break;
 }
 
 
