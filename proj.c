@@ -36,6 +36,9 @@ unsigned int licznik3=0;
 unsigned char key;//stan klawiatury
 int pom3 = 0;
 
+short int lcdindeks=0;
+
+
 __code unsigned char Cyfry[10]= {0b0111111, 0b0000110, 0b1011011, 0b1001111, 0b1100110, 0b1101101, 0b1111101, 0b0000111, 0b1111111, 0b1101111};
 __data unsigned char trybedycji[6] = {0,0,0,0,0,0};//hhmmss     //równie¿ do wyslania aktualnego czasu
 __data unsigned char liczbystartowe[6] = {0,0,0,0,0,0};//hhmmss
@@ -65,7 +68,7 @@ void _KB();
 
 void poczekaj();
 void LCDGET();
-
+void LCDEDIT();
 
 void _7SEG_REFRESH()
 { 
@@ -675,6 +678,7 @@ licznik3++;
        zerowanieodbioru();
 	}
 	if(znaki_odebrane[0]=='E'&&znaki_odebrane[1]=='D'&&znaki_odebrane[2]=='I'&&znaki_odebrane[3]=='T'&&znaki_odebrane[4]==13&&znaki_odebrane[5]==10){
+	LCDEDIT();
 	OBSLUGA();
 	zerowanieodbioru();
 	}
@@ -694,7 +698,7 @@ if(pomock==0&&znaki_odebrane[0]=='G'&&znaki_odebrane[1]=='E'&&znaki_odebrane[2]=
 	znaki_odebrane[1]=liczbystartowe[4]+48;
 	znaki_odebrane[0]=liczbystartowe[5]+48;
 pomock=1;
-
+LCDGET();
 }
 if(pomock)
 sendflag=1;
@@ -841,4 +845,68 @@ poczekaj();
 poczekaj();
 *LCDWD = ' '; //12
 poczekaj();
+*LCDWD = ' '; //13
+poczekaj();
+*LCDWD = 'O'; //14
+poczekaj();
+*LCDWD = 'K'; //15
+poczekaj();
+*LCDWD = ' '; //16
+poczekaj();
+
+lcdindeks=0;
+while(lcdindeks!=24 ){
+lcdindeks++;
+*LCDWD = ' '; //16
+poczekaj();
 }
+}
+
+
+void LCDEDIT()
+{
+poczekaj();
+*LCDWD = 'E'; //1
+poczekaj();
+*LCDWD = 'D';  //2
+poczekaj();
+*LCDWD = 'I';    //3
+poczekaj();
+
+*LCDWD = 'T'; //4
+poczekaj();
+*LCDWD = ' '; //5
+poczekaj();
+*LCDWD = ' '; //6
+poczekaj();
+*LCDWD = ' '; //7
+poczekaj();
+*LCDWD = ' '; //8
+poczekaj();
+*LCDWD = ' '; //9
+poczekaj();
+*LCDWD = ' '; //10
+poczekaj();
+*LCDWD = ' '; //11
+poczekaj();
+*LCDWD = ' '; //12
+poczekaj();
+*LCDWD = ' '; //13
+poczekaj();
+*LCDWD = 'O'; //14
+poczekaj();
+*LCDWD = 'K'; //15
+poczekaj();
+*LCDWD = ' '; //16
+poczekaj();
+
+
+lcdindeks=0;
+while(lcdindeks!=24 ){
+lcdindeks++;
+*LCDWD = ' '; //16
+poczekaj();
+}
+
+}
+
