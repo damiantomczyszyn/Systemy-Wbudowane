@@ -29,7 +29,7 @@ unsigned int licznik=0;
 unsigned char wyswietlana =0;
 unsigned int indeks1=0;
 short int x=0;
-unsigned char znaki_odebrane[12];
+unsigned char znaki_odebrane[15];
 unsigned char licznik2=0;
 unsigned int licznik3=0;
 
@@ -676,7 +676,7 @@ znaki_odebrane[licznik3]=SBUF;
 
 
 licznik3++;
- 	if(licznik3==11){
+ 	if(licznik3==12){  //zmien na 11 dla obslugi bledow
 
        LCDERR();
 
@@ -715,6 +715,7 @@ sendflag=1;
 
 void SET()
 {
+
 if(znaki_odebrane[0]=='S'&&znaki_odebrane[1]=='E'&&znaki_odebrane[2]=='T'
 &&znaki_odebrane[3]-48>=0&&znaki_odebrane[3]-48<=2
 &&znaki_odebrane[4]-48>=0&&znaki_odebrane[4]-48<=9
@@ -759,6 +760,7 @@ void zerowanieodbioru()
 	znaki_odebrane[9]='-';
 	znaki_odebrane[10]='-';
 	znaki_odebrane[11]='-';
+	znaki_odebrane[12]='-';
 
 	ile=0;
 	licznik3=0;
