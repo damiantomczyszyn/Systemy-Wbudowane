@@ -1,6 +1,4 @@
 
-
-
 #include <8051.h>
 __bit __at(0x97) LED;
 __bit __at (0x95) BUZZER;
@@ -326,13 +324,77 @@ klawmultiplekss=0b00001000;
 y=100;
 while(y!=0)
 y--;
+if (ktoryedytowany == 1)
+goto minuty;
+if (ktoryedytowany == 2)
+goto godziny;
+if (ktoryedytowany == 0)//to sekundy
+{
 
 
-//liczbystartowe[3]++;
+	if (liczbystartowe[0] + 1 == 10)          // jeœli 1 zanak sek przeskakuje na 10 to
+	{     //BUZZER=0;
+
+		liczbystartowe[0] = 0;          //zmieñ go na zero      kk
+
+		if (liczbystartowe[1] + 1 == 6)            //i jeœli w tym czasie przeskakuje 2gi znak sek to zmieñ go na zero kk
+		{
+			liczbystartowe[1] = 0;
+		minuty:
+			if (liczbystartowe[2] + 1 == 10)          // jeœli 1 zanak min przeskakuje na 10 to
+			{
+				liczbystartowe[2] = 0;          //zmieñ go na zero
+
+				if (liczbystartowe[3] + 1 == 6)            //i jeœli w tym czasie przeskakuje 2gi znak min to zmieñ go na zero
+				{
+					liczbystartowe[3] = 0;
+
+				godziny:
+					if ((liczbystartowe[4] + 1 == 4) && (liczbystartowe[5] == 2))//jeœli przeskakuje na 24 to godzina = 00
+					{
+						liczbystartowe[4] = 0;
+						liczbystartowe[5] = 0;
+					}
+					else                  //jeœli nie to
 
 
-//LED^=1;
-      }
+						if (liczbystartowe[4] + 1 == 10)          // jeœli 1 zanak godz przeskakuje na 10 to jeœli przeskakuje na 4 to sprawdz czy nie ma 23
+						{
+							liczbystartowe[4] = 0;          //zmieñ go na zero
+							liczbystartowe[5]++;           //oraz zwiêksz 2gi znak godziny
+						}
+
+						else
+							liczbystartowe[4]++;         //gdy przeskakuje pierwszy znak godz bez przepe³nienia
+
+
+
+				}
+				else     // gdy przeskakuje 2gi znak sek   bez przepe³nienia
+					liczbystartowe[3]++;
+
+
+			}
+			else
+				liczbystartowe[2]++;         //gdy przeskakuje pierwszy znak sek bez przepe³nienia
+
+
+		}
+		else     // gdy przeskakuje 2gi znak sek   bez przepe³nienia
+			liczbystartowe[1]++;
+
+	}
+	else                                                                     // kk
+		liczbystartowe[0]++;         //gdy przeskakuje pierwszy znak sek bez przepe³nienia
+}
+
+
+
+    //nieodsw=1;
+
+
+LED^=1;           }
+
 
 if(indeks1==    0b00010000&&kbt1==1){  //wciœniêty     DÓ£
 klawmultiplekss=0b00010000;
@@ -488,4 +550,3 @@ KLAW_MULT();
 }
 
 }
-
