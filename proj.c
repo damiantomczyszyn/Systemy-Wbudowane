@@ -1,3 +1,12 @@
+//Prêdkoœæ 4800
+//Polecenie SET - ‘SET00.00.01’ bez spacji pomiêdzy i bez enetra na koñcu
+//GET z enterem
+//EDIT z enterem
+// Klawiatura multipleksowana dzia³a i obs³uguje tylko jeden klawisz jednoczeœnie
+// Wykonane zadania zad1,zad2,zad3,zad4
+
+
+
 
 #include <8051.h>
 __bit __at(0x97) LED;
@@ -13,13 +22,19 @@ __bit migflag=0;
 __bit edycja=0;
 __bit nieodsw=1;
 __bit niezmienia=0;
+__bit pomock=0;
+unsigned char ile=0;
 unsigned char indeks = 0,ktoryedytowany=0;
 unsigned int licznik=0; 
 unsigned char wyswietlana =0;
 unsigned int indeks1=0;
-
-
+short int x=0;
+unsigned char znaki_odebrane[12];
 unsigned char licznik2=0;
+unsigned int licznik3=0;
+
+unsigned char key;//stan klawiatury
+int pom3 = 0;
 
 __code unsigned char Cyfry[10]= {0b0111111, 0b0000110, 0b1011011, 0b1001111, 0b1100110, 0b1101101, 0b1111101, 0b0000111, 0b1111111, 0b1101111};
 __data unsigned char trybedycji[6] = {0,0,0,0,0,0};//hhmmss     //równie¿ do wyslania aktualnego czasu
@@ -31,10 +46,25 @@ __xdata unsigned char* buf_CSDB = (__xdata unsigned char*) 0xff38;
 __xdata unsigned char* buf_CSDS = (__xdata unsigned char*) 0xFF30;
 __xdata unsigned char * buf_CSKB0 = (__xdata unsigned char*) 0xff21;
 __xdata unsigned char * buf_CSKB1 = (__xdata unsigned char*) 0xff22;
+
+__xdata unsigned char* LCDWC = (__xdata unsigned char*) 0xff80;
+__xdata unsigned char* LCDWD = (__xdata unsigned char*) 0xff81;
+__xdata unsigned char* LCDRC = (__xdata unsigned char*) 0xFF82;
+
 unsigned char i=0;
 
 __bit t0_flag1=0 ;//flag 1 do migania w trybie edycji
 
+void sio_int(void) __interrupt(4);
+void rec();
+void send();
+void GET();
+void SET();
+void zerowanieodbioru();
+void _KB();
+
+void poczekaj();
+void LCDGET();
 
 
 void _7SEG_REFRESH()
@@ -131,6 +161,31 @@ TF1 = 0;  // po przepe³nieniu ustawia 1(flaga)
 
 ES=1;
 EA=1;
+
+
+//LCD
+
+poczekaj();
+
+*LCDWC = 0b00000110;//3
+
+poczekaj();
+*LCDWC = 0b00111011; //6
+
+poczekaj();
+*LCDWC = 0b00001111;//4
+poczekaj();
+
+*LCDWC = 0b00010100; //5
+poczekaj();
+
+
+*LCDWC = 0b00000001;    //clear
+poczekaj();
+
+
+
+
 
 }
 
@@ -508,22 +563,21 @@ while(i!=6)
 
 *buf_CSDS = indeks1;
 
-//EA=0;
 if(klawmultiplekss==0);
 if((indeks1==0b00000100||indeks1==0b00100000)&&kbt1==1)//klikniêty   LEWO  LUB PRAWO TO TRYB EDYCJI   //czyli edycja ale zapamietujemy co wcisniete
 {
 klawmultiplekss=indeks1;
 
-//nieodsw=1;
-OBSLUGA();//trybedycji
+
+OBSLUGA();
  }
 
- //nieodsw=1;
+
 indeks1 = indeks1 << 1;
 i++;
 
 }
-//nieodsw=1;
+
 
 
 }
@@ -538,15 +592,253 @@ INIT();
 	
 while(1)
 {
-if(t0_flag1)
-{
-t0_flag1=0;
+
+ 	GET();
+	SET();
+
+ if(recflag){
+  recflag=0;
+  rec();
+  }
+
+ if(sendflag)
+  send();
+   if(t0_flag1)
+{   t0_flag1=0;
+if(licznik3!=0){
+ile++;
+ 	       if(ile%2==0)
+ 		{
+		zerowanieodbioru();
+	//	LED^=1;
+		//ERR
+		}   }
+
 TIME();
+
 }
+
+
+
+
 KLAW_MULT();
+}//koniec while
+
+
+}
+   //tr szer nizej
+
+
+ void sio_int(void) __interrupt(4)
+{
+if (TI)   {  //jeœli odebrano
+TI = 0;  //zerowanie flagi wysy³ania
+
+	  }
+else   {
+RI =0;      //zerowanie flagi odbioru
+recflag =1 ;   //ustawienie flagi odebrania
+	}
+}
+
+void send()
+{
+if(TI)
+return;
+   x=1;
+   while(x!=301)
+   x++;
+
+sendflag=0;
+SBUF=znaki_odebrane[licznik2];
+
+licznik2++;
+
+	if(licznik2==8)
+	{
+	zerowanieodbioru();
+ licznik2=0;
+	}
+}
+
+void rec()
+{
+
+ ile++;
+znaki_odebrane[licznik3]=SBUF;
+
+
+licznik3++;
+ 	if(licznik3==12){
+
+
+       zerowanieodbioru();
+	}
+	if(znaki_odebrane[0]=='E'&&znaki_odebrane[1]=='D'&&znaki_odebrane[2]=='I'&&znaki_odebrane[3]=='T'&&znaki_odebrane[4]==13&&znaki_odebrane[5]==10){
+	OBSLUGA();
+	zerowanieodbioru();
+	}
+
+}
+
+void GET()
+{
+if(pomock==0&&znaki_odebrane[0]=='G'&&znaki_odebrane[1]=='E'&&znaki_odebrane[2]=='T'&&znaki_odebrane[3]==13&&znaki_odebrane[4]==10)
+{
+	znaki_odebrane[7]=liczbystartowe[0]+48;
+	znaki_odebrane[6]=liczbystartowe[1]+48;
+	znaki_odebrane[5]='.';
+	znaki_odebrane[4]=liczbystartowe[2]+48;
+	znaki_odebrane[3]=liczbystartowe[3]+48;
+	znaki_odebrane[2]='.';
+	znaki_odebrane[1]=liczbystartowe[4]+48;
+	znaki_odebrane[0]=liczbystartowe[5]+48;
+pomock=1;
+
+}
+if(pomock)
+sendflag=1;
 
 
 
 }
 
+void SET()
+{
+if(znaki_odebrane[0]=='S'&&znaki_odebrane[1]=='E'&&znaki_odebrane[2]=='T'
+&&znaki_odebrane[3]-48>=0&&znaki_odebrane[3]-48<=2
+&&znaki_odebrane[4]-48>=0&&znaki_odebrane[4]-48<=9
+&&znaki_odebrane[5]=='.'
+&&znaki_odebrane[6]-48>=0&&znaki_odebrane[6]-48<=5
+&&znaki_odebrane[7]-48>=0&&znaki_odebrane[7]-48<=9
+&&znaki_odebrane[8]=='.'
+&&znaki_odebrane[9]-48>=0&&znaki_odebrane[9]-48<=5
+&&znaki_odebrane[10]-48>=0&&znaki_odebrane[10]-48<=9 ){
+
+liczbystartowe[5]=(znaki_odebrane[3]-48);
+liczbystartowe[4]=(znaki_odebrane[4]-48);
+
+liczbystartowe[3]=(znaki_odebrane[6]-48);
+liczbystartowe[2]=(znaki_odebrane[7]-48);
+
+liczbystartowe[1]=(znaki_odebrane[9]-48);
+liczbystartowe[0]=(znaki_odebrane[10]-48);
+//
+zerowanieodbioru();
+
+TH0 = 253;
+TL0 = 0;
+licznik = 0;
+nieodsw=1;
+
+
+t0_flag1 = 0;
+}
+}
+void zerowanieodbioru()
+{
+	znaki_odebrane[0]='-';
+	znaki_odebrane[1]='-';
+	znaki_odebrane[2]='-';
+	znaki_odebrane[3]='-';
+	znaki_odebrane[4]='-';
+	znaki_odebrane[5]='-';
+	znaki_odebrane[6]='-';
+	znaki_odebrane[7]='-';
+	znaki_odebrane[9]='-';
+	znaki_odebrane[10]='-';
+	znaki_odebrane[11]='-';
+
+	ile=0;
+	licznik3=0;
+
+
+	licznik2=0;
+	pomock=0;
+
+}
+
+
+ void _KB()
+  {
+   
+ if(*buf_CSKB1!=key)
+   pom3=0;
+
+ key=*buf_CSKB1; //wczytujemy co jest wciœniête
+
+if(key==0b01111111&&pom3==0)// F  bit7   ENTER
+  {
+  	LED^=1;
+    pom3=1;
+   }
+
+ if(key==0b10111111&&pom3==0)// E  bit 6 ESC
+  {
+
+    pom3=1;
+   }
+else
+   if(key==0b11011111&&pom3==0)// dó³ bit 5
+  {
+
+    pom3=1;
+   }
+ else
+   if(key==0b11101111&&pom3==0)//   góra dbit 4
+  {
+    pom3=1;
+   }
+ else
+   if(key==0b11110111&&pom3==0)//   prawo  bit 3
+  {
+
+
+    pom3=1;
+   }
+ else
+   if(key==0b11111011&&pom3==0)// lewo   bit 2
+  {
+    pom3=1;
+   }
+
+}
+
+
+
+void poczekaj(){
+
+while((*LCDRC&0b10000000)==0b10000000)//LCDRC.7
+;
+}   
+
+
+void LCDGET()
+{
+poczekaj();
+*LCDWD = 'G'; //1
+poczekaj();
+*LCDWD = 'E';  //2
+poczekaj();
+*LCDWD = 'T';    //3
+poczekaj();
+
+*LCDWD = ' '; //4
+poczekaj();
+*LCDWD = ' '; //5
+poczekaj();
+*LCDWD = ' '; //6
+poczekaj();
+*LCDWD = ' '; //7
+poczekaj();
+*LCDWD = ' '; //8
+poczekaj();
+*LCDWD = ' '; //9
+poczekaj();
+*LCDWD = ' '; //10
+poczekaj();
+*LCDWD = ' '; //11
+poczekaj();
+*LCDWD = ' '; //12
+poczekaj();
 }
