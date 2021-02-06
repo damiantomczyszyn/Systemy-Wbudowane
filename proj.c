@@ -37,7 +37,7 @@ unsigned char key;//stan klawiatury
 int pom3 = 0;
 
 short int lcdindeks=0;
-
+unsigned char errindeks=0;
 
 __code unsigned char Cyfry[10]= {0b0111111, 0b0000110, 0b1011011, 0b1001111, 0b1100110, 0b1101101, 0b1111101, 0b0000111, 0b1111111, 0b1101111};
 __data unsigned char trybedycji[6] = {0,0,0,0,0,0};//hhmmss     //równie¿ do wyslania aktualnego czasu
@@ -69,6 +69,9 @@ void _KB();
 void poczekaj();
 void LCDGET();
 void LCDEDIT();
+void LCDSET();
+void LCDERR();
+
 
 void _7SEG_REFRESH()
 { 
@@ -590,7 +593,7 @@ void main()
 {
 	
 INIT();
-
+zerowanieodbioru();
 	
 	
 while(1)
@@ -614,7 +617,7 @@ ile++;
  		{
 		zerowanieodbioru();
 	//	LED^=1;
-		//ERR
+                 LCDERR();
 		}   }
 
 TIME();
@@ -674,6 +677,7 @@ znaki_odebrane[licznik3]=SBUF;
 licznik3++;
  	if(licznik3==12){
 
+       LCDERR();
 
        zerowanieodbioru();
 	}
@@ -728,6 +732,7 @@ liczbystartowe[2]=(znaki_odebrane[7]-48);
 liczbystartowe[1]=(znaki_odebrane[9]-48);
 liczbystartowe[0]=(znaki_odebrane[10]-48);
 //
+LCDSET();
 zerowanieodbioru();
 
 TH0 = 253;
@@ -909,4 +914,88 @@ poczekaj();
 }
 
 }
+
+
+void LCDSET()
+{
+poczekaj();
+*LCDWD = 'S'; //1
+poczekaj();
+*LCDWD = 'E';  //2
+poczekaj();
+*LCDWD = 'T';    //3
+poczekaj();
+
+*LCDWD = znaki_odebrane[3]; //4
+poczekaj();
+*LCDWD = znaki_odebrane[4]; //5
+poczekaj();
+*LCDWD = '.'; //6
+poczekaj();
+*LCDWD =znaki_odebrane[6];
+poczekaj();
+*LCDWD = znaki_odebrane[7]; //8
+poczekaj();
+*LCDWD = '.'; //9
+poczekaj();
+*LCDWD = znaki_odebrane[9]; //10
+poczekaj();
+*LCDWD = znaki_odebrane[10]; //11
+poczekaj();
+*LCDWD = ' '; //12
+poczekaj();
+*LCDWD = ' '; //13
+poczekaj();
+*LCDWD = 'O'; //14
+poczekaj();
+*LCDWD = 'K'; //15
+poczekaj();
+*LCDWD = ' '; //16
+poczekaj();
+
+
+lcdindeks=0;
+while(lcdindeks!=24 ){
+lcdindeks++;
+*LCDWD = ' '; //16
+poczekaj();
+}
+
+}
+
+void LCDERR()
+{
+errindeks=0;
+
+poczekaj();
+while(znaki_odebrane[errindeks]!='-')
+{
+*LCDWD = znaki_odebrane[errindeks];  //2
+poczekaj();
+errindeks++;
+}
+while(errindeks!=13){
+*LCDWD = ' '; //14
+poczekaj();
+errindeks++;
+}
+
+*LCDWD = 'E'; //14
+poczekaj();
+*LCDWD = 'R'; //15
+poczekaj();
+*LCDWD = 'R'; //16
+poczekaj();
+
+
+lcdindeks=0;
+while(lcdindeks!=24 ){
+lcdindeks++;
+*LCDWD = ' '; //16
+poczekaj();
+}
+
+}
+
+
 
