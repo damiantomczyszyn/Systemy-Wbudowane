@@ -22,7 +22,7 @@ unsigned int indeks1=0;
 
 
 unsigned char licznik2=0;
-short int x=0;
+
 __code unsigned char Cyfry[10]= {0b0111111, 0b0000110, 0b1011011, 0b1001111, 0b1100110, 0b1101101, 0b1111101, 0b0000111, 0b1111111, 0b1101111};
 __data unsigned char trybedycji[6] = {0,0,0,0,0,0};//hhmmss     //równie¿ do wyslania aktualnego czasu
 __data unsigned char liczbystartowe[6] = {0,0,0,0,0,0};//hhmmss
@@ -44,7 +44,7 @@ void _7SEG_REFRESH()
 
 indeks=0b00000001;
 wyswietlana = 0;
-;
+
 
 	niezmienia=0;
 	while(indeks!=0b01000000)
@@ -78,11 +78,13 @@ wyswietlana=4;   }
             	wyswietlana++;
 
             	indeks = indeks << 1;
-
+		// LED^=1;
             	//seg = 0;  //w³¹cz
         }
             seg = 1;  //wy³¹cz
             niezmienia=1;
+             
+
 	 }
 
 
@@ -205,12 +207,14 @@ trybedycji[3]=liczbystartowe[3];
 trybedycji[4]=liczbystartowe[4];
 trybedycji[5]=liczbystartowe[5];
 ktoryedytowany=0;
-TH0 = 253;
-licznik=0;
+
+
 
 
 while(1)  //trybedycjiu
 {
+
+
 	nieodsw=1;
 y=0;
 while(y<30)
@@ -259,7 +263,9 @@ klawmultiplekss&=   0b11101111;
 if((klawmultiplekss&0b00100000)==(indeks1)&&kbt1==0)//odklikniêty   lewo
 klawmultiplekss&=   0b11011111;
 //nieodsw=1;
-} else//jeœli ==0 to nic nie jest wciœniête i mo¿emy coœ przycisn¹æ
+}
+
+ else//jeœli ==0 to nic nie jest wciœniête i mo¿emy coœ przycisn¹æ
 {   //nieodsw=1;
 
 if(indeks1==    0b00000001&&kbt1==1){  //wciœniêty  enter
@@ -271,27 +277,34 @@ TH0 = 253;
 licznik = 0;
 edycja=0;
 nieodsw=1;
-
-goto wyjdz;
-
+t0_flag1 = 0;
+//goto wyjdz;
+  break;
 
  }
 
 if(indeks1==    0b00000010&&kbt1==1){  //wciœniêty  ESC
 klawmultiplekss=0b00000010;
-liczbystartowe[0]=trybedycji[0]; //zapisanie wartoœci
+
+
+
+liczbystartowe[0]=trybedycji[0]; //wczytanie poprzednich
 liczbystartowe[1]=trybedycji[1];
 liczbystartowe[2]=trybedycji[2];
 liczbystartowe[3]=trybedycji[3];
 liczbystartowe[4]=trybedycji[4];
 liczbystartowe[5]=trybedycji[5];
+
 LED^=1;           
 TH0 = 253;
 TL0 = 0;
 licznik = 0;
 nieodsw=1;
-goto wyjdz;
-break;
+edycja=0;
+
+t0_flag1 = 0;
+//goto wyjdz;
+ break;
 }
 
 
@@ -310,81 +323,22 @@ LED^=1;           }
 
 if(indeks1==    0b00001000&&kbt1==1){  //wciœniêty     GÓRA
 klawmultiplekss=0b00001000;
- //nieodsw=0;
-if (ktoryedytowany == 1)
-goto minuty;
-if (ktoryedytowany == 2)
-goto godziny;
-if (ktoryedytowany == 0)//to sekundy
-{
+y=100;
+while(y!=0)
+y--;
 
 
-	if (liczbystartowe[0] + 1 == 10)          // jeœli 1 zanak sek przeskakuje na 10 to
-	{     //BUZZER=0;
-
-		liczbystartowe[0] = 0;          //zmieñ go na zero      kk
-
-		if (liczbystartowe[1] + 1 == 6)            //i jeœli w tym czasie przeskakuje 2gi znak sek to zmieñ go na zero kk
-		{
-			liczbystartowe[1] = 0;
-		minuty:
-			if (liczbystartowe[2] + 1 == 10)          // jeœli 1 zanak min przeskakuje na 10 to
-			{
-				liczbystartowe[2] = 0;          //zmieñ go na zero
-
-				if (liczbystartowe[3] + 1 == 6)            //i jeœli w tym czasie przeskakuje 2gi znak min to zmieñ go na zero
-				{
-					liczbystartowe[3] = 0;
-
-				godziny:
-					if ((liczbystartowe[4] + 1 == 4) && (liczbystartowe[5] == 2))//jeœli przeskakuje na 24 to godzina = 00
-					{
-						liczbystartowe[4] = 0;
-						liczbystartowe[5] = 0;
-					}
-					else                  //jeœli nie to
+//liczbystartowe[3]++;
 
 
-						if (liczbystartowe[4] + 1 == 10)          // jeœli 1 zanak godz przeskakuje na 10 to jeœli przeskakuje na 4 to sprawdz czy nie ma 23
-						{
-							liczbystartowe[4] = 0;          //zmieñ go na zero
-							liczbystartowe[5]++;           //oraz zwiêksz 2gi znak godziny
-						}
-
-						else
-							liczbystartowe[4]++;         //gdy przeskakuje pierwszy znak godz bez przepe³nienia
-
-
-
-				}
-				else     // gdy przeskakuje 2gi znak sek   bez przepe³nienia
-					liczbystartowe[3]++;
-
-
-			}
-			else
-				liczbystartowe[2]++;         //gdy przeskakuje pierwszy znak sek bez przepe³nienia
-
-
-		}
-		else     // gdy przeskakuje 2gi znak sek   bez przepe³nienia
-			liczbystartowe[1]++;
-
-	}
-	else                                                                     // kk
-		liczbystartowe[0]++;         //gdy przeskakuje pierwszy znak sek bez przepe³nienia
-}
-
-
-
-    //nieodsw=1;
-
-
-LED^=1;           }
+//LED^=1;
+      }
 
 if(indeks1==    0b00010000&&kbt1==1){  //wciœniêty     DÓ£
 klawmultiplekss=0b00010000;
- //nieodsw=0;
+y=100;
+while(y!=0)
+y--;
 if (ktoryedytowany == 1)
 goto minutydol;
 if (ktoryedytowany == 2)
@@ -501,13 +455,15 @@ klawmultiplekss=indeks1;
 //nieodsw=1;
 OBSLUGA();//trybedycji
  }
- wyjdz:
+
  //nieodsw=1;
 indeks1 = indeks1 << 1;
 i++;
 
 }
 //nieodsw=1;
+
+
 }
 
 
@@ -526,9 +482,10 @@ t0_flag1=0;
 TIME();
 }
 KLAW_MULT();
+
+
+
 }
-
-
 
 }
 
