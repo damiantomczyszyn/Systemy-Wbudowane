@@ -615,9 +615,10 @@ if(licznik3!=0){
 ile++;
  	       if(ile%2==0)
  		{
+			LCDERR();
 		zerowanieodbioru();
 	//	LED^=1;
-                 LCDERR();
+                 
 		}   }
 
 TIME();
@@ -703,6 +704,7 @@ if(pomock==0&&znaki_odebrane[0]=='G'&&znaki_odebrane[1]=='E'&&znaki_odebrane[2]=
 	znaki_odebrane[0]=liczbystartowe[5]+48;
 pomock=1;
 LCDGET();
+
 }
 if(pomock)
 sendflag=1;
