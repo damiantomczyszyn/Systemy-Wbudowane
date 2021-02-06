@@ -618,7 +618,7 @@ ile++;
 			LCDERR();
 		zerowanieodbioru();
 	//	LED^=1;
-                 
+
 		}   }
 
 TIME();
@@ -676,7 +676,7 @@ znaki_odebrane[licznik3]=SBUF;
 
 
 licznik3++;
- 	if(licznik3==12){
+ 	if(licznik3==11){
 
        LCDERR();
 
