@@ -66,8 +66,13 @@ __xdata unsigned char* historia = (__xdata unsigned char*) 0x4000;
 
 unsigned char indeksh=0;
 unsigned char ilerozkazow=0;
-unsigned char histpom;
+unsigned char histpom=0;
 void wypiszh();
+
+
+
+void przesun();
+unsigned char a=0,b=0;
 
 void sio_int(void) __interrupt(4);
 void rec();
@@ -808,7 +813,8 @@ if(key==0b01111111&&pom3==0)// F  bit7   ENTER
 else
    if(key==0b11011111&&pom3==0)// dó³ bit 5
   {
-
+  if(indeksh!=0)//dolny ogranicznik rozkazów
+  indeksh--;
     pom3=1;
      LED^=1;
    }
@@ -816,7 +822,9 @@ else
    if(key==0b11101111&&pom3==0)//   góra dbit 4
   {
     pom3=1;
-     LED^=1;
+     BUZZER^=1;
+     if(indeksh<ilerozkazow)//górny ogranicznik iloœci rozkazów
+     indeksh++;
    }
  else
    if(key==0b11110111&&pom3==0)//   prawo  bit 3
@@ -887,6 +895,8 @@ lcdindeks++;
 *LCDWD = ' '; //16
 poczekaj();
 }
+if(ilerozkazow<7)
+ilerozkazow++;
 }
 
 
@@ -934,7 +944,8 @@ lcdindeks++;
 *LCDWD = ' '; //16
 poczekaj();
 }
-
+if(ilerozkazow<7)
+ilerozkazow++;
 }
 
 
@@ -982,7 +993,8 @@ lcdindeks++;
 *LCDWD = ' '; //16
 poczekaj();
 }
-
+if(ilerozkazow<7)
+ilerozkazow++;
 }
 
 void LCDERR()
@@ -1021,21 +1033,26 @@ poczekaj();
 *LCDWD = 'R'; //16
 poczekaj();
 
-
+//
+   przesun();
+  //
 lcdindeks=0;
 while(lcdindeks!=24 ){
 lcdindeks++;
 *LCDWD = ' '; //16
 poczekaj();
 }
-
+if(ilerozkazow<7)
+ilerozkazow++;
 }
 
 void wypiszh()
 {
-histpom=(unsigned char)historia;
-historia-=16;
-
+//histpom=(unsigned char)historia;
+//historia-=16;
+historia=(__xdata unsigned char*)0x4010;
+histpom=(unsigned char)(historia+16);
+//historia-=16;
 while((unsigned char)historia!=histpom)
 {
 poczekaj();
@@ -1049,5 +1066,26 @@ historia++;
 //*LCDWD = 'R'; //16
 historia++;
 
+}
+void przesun()
+{
+
+b=9;
+historia=(__xdata unsigned char*)0x4080 ;
+
+while(b--)
+{  a=16;
+	while(a--)
+	{
+	*(historia+16)=*historia;
+	historia++;
+
+	}
+historia-=32;
+
+}
+historia+=16;
+if(historia==(__xdata unsigned char*)0x4000)
+BUZZER=0;
 }
 
