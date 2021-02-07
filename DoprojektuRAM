@@ -1,0 +1,10 @@
+__xdata unsigned char* historia = (__xdata unsigned char*) 0x4000;
+
+
+*historia='a';
+//historia++;
+ *historia='b';
+// if(*(historia-1)=='a')
+ //if(*(historia+1)=='b')
+ if((historia)==(__xdata unsigned char*)0x4000)
+ LED=0;
