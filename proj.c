@@ -1036,13 +1036,18 @@ void wypiszh()
 histpom=(unsigned char)historia;
 historia-=16;
 
-while((unsigned char)historia!=histpom-1)
+while((unsigned char)historia!=histpom)
 {
 poczekaj();
 *LCDWD = *historia;
 
 historia++;
 }
+//historia--;
+//if(historia)
+//poczekaj();
+//*LCDWD = 'R'; //16
+historia++;
 
 }
 
