@@ -28,11 +28,11 @@ unsigned char ile=0;
 unsigned char indeks = 0,ktoryedytowany=0;
 unsigned int licznik=0; 
 unsigned char wyswietlana =0;
-unsigned int indeks1=0;
+unsigned char indeks1=0;
 short int x=0;
 unsigned char znaki_odebrane[15];
 unsigned char licznik2=0;
-unsigned int licznik3=0;
+unsigned char licznik3=0;
 
 unsigned char key;//stan klawiatury
 
@@ -64,10 +64,9 @@ __xdata unsigned char* historia = (__xdata unsigned char*) 0x4000;
 
 
 
-
-
-
-
+unsigned char indeksh=0;
+unsigned char ilerozkazow=0;
+unsigned char histpom;
 
 
 void sio_int(void) __interrupt(4);
