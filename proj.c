@@ -813,8 +813,12 @@ if(key==0b01111111&&pom3==0)// F  bit7   ENTER
 else
    if(key==0b11011111&&pom3==0)// dó³ bit 5
   {
-  if(indeksh!=0)//dolny ogranicznik rozkazów
-  indeksh--;
+    if(indeksh<ilerozkazow-1)//górny ogranicznik iloœci rozkazów
+    { indeksh++;
+    wypiszh();
+  }
+
+
     pom3=1;
      LED^=1;
    }
@@ -823,9 +827,12 @@ else
   {
     pom3=1;
      BUZZER^=1;
-     if(indeksh<ilerozkazow)//górny ogranicznik iloœci rozkazów
-     indeksh++;
-   }
+       if(indeksh!=0)//dolny ogranicznik rozkazów
+ { indeksh--;
+    wypiszh();
+  }
+  }
+   
  else
    if(key==0b11110111&&pom3==0)//   prawo  bit 3
   {
@@ -1051,6 +1058,7 @@ void wypiszh()
 //histpom=(unsigned char)historia;
 //historia-=16;
 historia=(__xdata unsigned char*)0x4010;
+historia+=(indeksh*16);
 histpom=(unsigned char)(historia+16);
 //historia-=16;
 while((unsigned char)historia!=histpom)
@@ -1060,11 +1068,18 @@ poczekaj();
 
 historia++;
 }
+
+lcdindeks=0;
+while(lcdindeks!=24 ){
+lcdindeks++;
+poczekaj();
+*LCDWD = ' '; //16
+ }
 //historia--;
 //if(historia)
 //poczekaj();
 //*LCDWD = 'R'; //16
-historia++;
+historia++; //niezbedne ustawienie na pierwszym wolnym
 
 }
 void przesun()
@@ -1085,7 +1100,7 @@ historia-=32;
 
 }
 historia+=16;
-if(historia==(__xdata unsigned char*)0x4000)
-BUZZER=0;
+//if(historia==(__xdata unsigned char*)0x4000)
+//BUZZER=0;
 }
 
