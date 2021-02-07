@@ -1,4 +1,4 @@
-//Prêdkoœæ 4800
+//Prêdkoœæ 4800   Liczba bitów miêdzy bajtami: 2
 //Polecenie SET - ‘SET00.00.01’ bez spacji pomiêdzy i bez enetra na koñcu
 //GET z enterem
 //EDIT z enterem
@@ -23,6 +23,7 @@ __bit edycja=0;
 __bit nieodsw=1;
 __bit niezmienia=0;
 __bit pomock=0;
+__bit pom3 = 0;
 unsigned char ile=0;
 unsigned char indeks = 0,ktoryedytowany=0;
 unsigned int licznik=0; 
@@ -34,7 +35,7 @@ unsigned char licznik2=0;
 unsigned int licznik3=0;
 
 unsigned char key;//stan klawiatury
-int pom3 = 0;
+
 
 short int lcdindeks=0;
 unsigned char errindeks=0;
@@ -42,12 +43,12 @@ unsigned char errindeks=0;
 __code unsigned char Cyfry[10]= {0b0111111, 0b0000110, 0b1011011, 0b1001111, 0b1100110, 0b1101101, 0b1111101, 0b0000111, 0b1111111, 0b1101111};
 __data unsigned char trybedycji[6] = {0,0,0,0,0,0};//hhmmss     //równie¿ do wyslania aktualnego czasu
 __data unsigned char liczbystartowe[6] = {0,0,0,0,0,0};//hhmmss
-//__data unsigned char klawmultipleks[6] = {0,0,0,0,0,0};//enter,esc,r,u,d,l
+
 unsigned char klawmultiplekss=0;
 unsigned char y=0;
 __xdata unsigned char* buf_CSDB = (__xdata unsigned char*) 0xff38;
 __xdata unsigned char* buf_CSDS = (__xdata unsigned char*) 0xFF30;
-__xdata unsigned char * buf_CSKB0 = (__xdata unsigned char*) 0xff21;
+
 __xdata unsigned char * buf_CSKB1 = (__xdata unsigned char*) 0xff22;
 
 __xdata unsigned char* LCDWC = (__xdata unsigned char*) 0xff80;
@@ -57,6 +58,17 @@ __xdata unsigned char* LCDRC = (__xdata unsigned char*) 0xFF82;
 unsigned char i=0;
 
 __bit t0_flag1=0 ;//flag 1 do migania w trybie edycji
+
+
+__xdata unsigned char* historia = (__xdata unsigned char*) 0x4000;
+
+
+
+
+
+
+
+
 
 void sio_int(void) __interrupt(4);
 void rec();
@@ -626,7 +638,7 @@ TIME();
 }
 
 
-
+_KB();
 
 KLAW_MULT();
 }//koniec while
@@ -791,28 +803,33 @@ if(key==0b01111111&&pom3==0)// F  bit7   ENTER
   {
 
     pom3=1;
+     LED^=1;
    }
 else
    if(key==0b11011111&&pom3==0)// dó³ bit 5
   {
 
     pom3=1;
+     LED^=1;
    }
  else
    if(key==0b11101111&&pom3==0)//   góra dbit 4
   {
     pom3=1;
+     LED^=1;
    }
  else
    if(key==0b11110111&&pom3==0)//   prawo  bit 3
   {
 
-
+     LED^=1;
     pom3=1;
    }
  else
    if(key==0b11111011&&pom3==0)// lewo   bit 2
   {
+  	
+  	 LED^=1;
     pom3=1;
    }
 
