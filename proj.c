@@ -67,7 +67,7 @@ __xdata unsigned char* historia = (__xdata unsigned char*) 0x4000;
 unsigned char indeksh=0;
 unsigned char ilerozkazow=0;
 unsigned char histpom;
-
+void wypiszh();
 
 void sio_int(void) __interrupt(4);
 void rec();
@@ -796,6 +796,7 @@ if(key==0b01111111&&pom3==0)// F  bit7   ENTER
   {
   	LED^=1;
     pom3=1;
+    wypiszh();
    }
 
  if(key==0b10111111&&pom3==0)// E  bit 6 ESC
@@ -991,16 +992,27 @@ errindeks=0;
 poczekaj();
 while(znaki_odebrane[errindeks]!='-')
 {
+*historia=znaki_odebrane[errindeks];
+historia++;
 *LCDWD = znaki_odebrane[errindeks];  //2
 poczekaj();
 errindeks++;
 }
-
 while(errindeks!=13){
+*historia=' ';
+historia++;
 *LCDWD = ' '; //14
 poczekaj();
 errindeks++;
 }
+*historia='E';
+historia++;
+
+*historia='R';
+historia++;
+
+*historia='R';
+historia++;      //ustawia na kolejnym
 
 *LCDWD = 'E'; //14
 poczekaj();
@@ -1015,6 +1027,21 @@ while(lcdindeks!=24 ){
 lcdindeks++;
 *LCDWD = ' '; //16
 poczekaj();
+}
+
+}
+
+void wypiszh()
+{
+histpom=(unsigned char)historia;
+historia-=16;
+
+while((unsigned char)historia!=histpom-1)
+{
+poczekaj();
+*LCDWD = *historia;
+
+historia++;
 }
 
 }
