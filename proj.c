@@ -904,11 +904,13 @@ poczekaj();
 }
 if(ilerozkazow<7)
 ilerozkazow++;
+indeksh=0;
+
 }
 
 
 void LCDEDIT()
-{
+{//indeksh=0;
 poczekaj();
 *LCDWD = 'E'; //1
 poczekaj();
@@ -953,11 +955,14 @@ poczekaj();
 }
 if(ilerozkazow<7)
 ilerozkazow++;
+indeksh=0;
+//indeksh=ilerozkazow-1;
 }
 
 
 void LCDSET()
 {
+//	indeksh=0;
 poczekaj();
 *LCDWD = 'S'; //1
 poczekaj();
@@ -1002,10 +1007,12 @@ poczekaj();
 }
 if(ilerozkazow<7)
 ilerozkazow++;
+indeksh=0;
+//indeksh=ilerozkazow-1;
 }
 
 void LCDERR()
-{
+{// indeksh=0;
 errindeks=0;
 
 poczekaj();
@@ -1051,6 +1058,8 @@ poczekaj();
 }
 if(ilerozkazow<7)
 ilerozkazow++;
+indeksh=0;
+
 }
 
 void wypiszh()
