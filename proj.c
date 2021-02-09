@@ -2,15 +2,15 @@
 //Polecenie SET - ‘SET00.00.01’ bez spacji pomiêdzy i bez enetra na koñcu
 //GET z enterem
 //EDIT z enterem
-// Klawiatura multipleksowana dzia³a i obs³uguje tylko jeden klawisz jednoczeœnie
-// Wykonane zadania zad1,zad2,zad3,zad4
+// Klawiatura multipleksowana/matrycowa dzia³a i obs³uguje tylko jeden klawisz jednoczeœnie
+// przechowywane 7 ostatnich rozkazów
+//wszystkie zadania wykonane
 
 
 
 
 #include <8051.h>
-__bit __at(0x97) LED;
-__bit __at (0x95) BUZZER;
+
 __bit __at(0xB5) kbt1;//p3.5
 __sbit __at (0x96) seg;
 __sbit __at (0XB5) T1;
@@ -33,7 +33,7 @@ short int x=0;
 unsigned char znaki_odebrane[15];
 unsigned char licznik2=0;
 unsigned char licznik3=0;
-
+//unsigned char zapiszhistorie; //NOWO DODANA ZA MALO PAMIECI ALE WYMAGANA DO POWROTU BY PONOWNIE WPISYWAC
 unsigned char key;//stan klawiatury
 
 
@@ -128,7 +128,7 @@ wyswietlana=4;   }
             	wyswietlana++;
 
             	indeks = indeks << 1;
-		// LED^=1;
+		
             	//seg = 0;  //w³¹cz
         }
             seg = 1;  //wy³¹cz
@@ -160,7 +160,7 @@ wyswietlana=4;   }
 
 void INIT()
 {
-
+//zapiszhistorie=(unsigned char)historia ;
 TMOD=0b00100001;//T1 off, T0-16bit
 TR0=1;
 TL0=0b00000000;
@@ -345,7 +345,7 @@ klawmultiplekss&=   0b11011111;
 
 if(indeks1==    0b00000001&&kbt1==1){  //wciœniêty  enter
 klawmultiplekss=0b00000001;
-LED^=1;          
+        
 //enter wznawia prace na edytowanych wartoœciach
 TL0 = 0;
 TH0 = 253;
@@ -370,7 +370,7 @@ liczbystartowe[3]=trybedycji[3];
 liczbystartowe[4]=trybedycji[4];
 liczbystartowe[5]=trybedycji[5];
 
-LED^=1;           
+        
 TH0 = 253;
 TL0 = 0;
 licznik = 0;
@@ -392,7 +392,7 @@ klawmultiplekss=0b00000100;
 
 if(ktoryedytowany!=0)
 ktoryedytowany--;
-LED^=1;           }
+        }
 
 
 
@@ -470,7 +470,7 @@ if (ktoryedytowany == 0)//to sekundy
     //nieodsw=1;
 
 
-LED^=1;           }
+        }
 
 
 if(indeks1==    0b00010000&&kbt1==1){  //wciœniêty     DÓ£
@@ -543,14 +543,14 @@ if (ktoryedytowany == 0)//to sekundy
 
    //nieodsw=1;
 
-LED^=1;           }
+          }
 
 
 
 
 if(indeks1==    0b00100000&&kbt1==1){  //wciœniêty       LEWO
 klawmultiplekss=0b00100000;
-LED^=1;          
+          
 if(ktoryedytowany!=2)// bo maj¹ po 2 wyœwietlacze sie edytowaæ sekundyx2 min x2 h x2
 ktoryedytowany++;
  }
@@ -633,7 +633,7 @@ ile++;
  		{
 			LCDERR();
 		zerowanieodbioru();
-	//	LED^=1;
+	//
 
 		}   }
 
@@ -797,56 +797,29 @@ void zerowanieodbioru()
 
  key=*buf_CSKB1; //wczytujemy co jest wciœniête
 
-if(key==0b01111111&&pom3==0)// F  bit7   ENTER
-  {
-  	LED^=1;
-    pom3=1;
-    wypiszh();
-   }
 
- if(key==0b10111111&&pom3==0)// E  bit 6 ESC
-  {
-
-    pom3=1;
-     LED^=1;
-   }
-else
    if(key==0b11011111&&pom3==0)// dó³ bit 5
   {
-    if(indeksh<ilerozkazow-1)//górny ogranicznik iloœci rozkazów
+    if(indeksh<ilerozkazow-1)
     { indeksh++;
     wypiszh();
   }
 
 
     pom3=1;
-     LED^=1;
+
    }
  else
    if(key==0b11101111&&pom3==0)//   góra dbit 4
   {
     pom3=1;
-     BUZZER^=1;
-       if(indeksh!=0)//dolny ogranicznik rozkazów
+
+       if(indeksh!=0)
  { indeksh--;
     wypiszh();
   }
   }
-   
- else
-   if(key==0b11110111&&pom3==0)//   prawo  bit 3
-  {
 
-     LED^=1;
-    pom3=1;
-   }
- else
-   if(key==0b11111011&&pom3==0)// lewo   bit 2
-  {
-  	
-  	 LED^=1;
-    pom3=1;
-   }
 
 }
 
@@ -861,42 +834,91 @@ while((*LCDRC&0b10000000)==0b10000000)//LCDRC.7
 
 void LCDGET()
 {
+	historia = (__xdata unsigned char*) 0x4000;
 poczekaj();
 *LCDWD = 'G'; //1
 poczekaj();
+*historia='G';
+historia++;
+
 *LCDWD = 'E';  //2
 poczekaj();
+*historia='E';
+historia++;
+
 *LCDWD = 'T';    //3
 poczekaj();
+*historia='T';
+historia++;
 
 *LCDWD = ' '; //4
 poczekaj();
+*historia=' ';
+historia++;
+
 *LCDWD = ' '; //5
 poczekaj();
+*historia=' ';
+historia++;
+
 *LCDWD = ' '; //6
 poczekaj();
+*historia=' ';
+historia++;
+
 *LCDWD = ' '; //7
 poczekaj();
+*historia=' ';
+historia++;
+
 *LCDWD = ' '; //8
 poczekaj();
+*historia=' ';
+historia++;
+
 *LCDWD = ' '; //9
 poczekaj();
+*historia=' ';
+historia++;
+
 *LCDWD = ' '; //10
 poczekaj();
+*historia=' ';
+historia++;
+
 *LCDWD = ' '; //11
 poczekaj();
+*historia=' ';
+historia++;
+
 *LCDWD = ' '; //12
 poczekaj();
+*historia=' ';
+historia++;
+
 *LCDWD = ' '; //13
 poczekaj();
+*historia=' ';
+historia++;
+
 *LCDWD = 'O'; //14
 poczekaj();
+*historia='O';
+historia++;
+
 *LCDWD = 'K'; //15
 poczekaj();
+*historia='K';
+historia++;
+
 *LCDWD = ' '; //16
 poczekaj();
+*historia=' ';
+historia++;
 
+przesun();
 lcdindeks=0;
+poczekaj();
 while(lcdindeks!=24 ){
 lcdindeks++;
 *LCDWD = ' '; //16
@@ -911,43 +933,90 @@ indeksh=0;
 
 void LCDEDIT()
 {//indeksh=0;
+historia = (__xdata unsigned char*) 0x4000;
 poczekaj();
 *LCDWD = 'E'; //1
 poczekaj();
+
+*historia='E';
+historia++;
+
 *LCDWD = 'D';  //2
 poczekaj();
+
+*historia='D';
+historia++;
+
 *LCDWD = 'I';    //3
 poczekaj();
+*historia='I';
+historia++;
 
 *LCDWD = 'T'; //4
 poczekaj();
+*historia='T';
+historia++;
 *LCDWD = ' '; //5
 poczekaj();
+*historia=' ';
+historia++;
+
 *LCDWD = ' '; //6
 poczekaj();
+*historia=' ';
+historia++;
+
 *LCDWD = ' '; //7
 poczekaj();
+*historia=' ';
+historia++;
+
 *LCDWD = ' '; //8
 poczekaj();
+*historia=' ';
+historia++;
+
 *LCDWD = ' '; //9
 poczekaj();
+*historia=' ';
+historia++;
+
 *LCDWD = ' '; //10
 poczekaj();
+*historia=' ';
+historia++;
+
 *LCDWD = ' '; //11
 poczekaj();
+*historia=' ';
+historia++;
+
 *LCDWD = ' '; //12
 poczekaj();
+*historia=' ';
+historia++;
+
 *LCDWD = ' '; //13
 poczekaj();
+*historia=' ';
+historia++;
+
 *LCDWD = 'O'; //14
 poczekaj();
+*historia='O';
+historia++;
 *LCDWD = 'K'; //15
 poczekaj();
+*historia='K';
+historia++;
 *LCDWD = ' '; //16
 poczekaj();
+*historia=' ';
+historia++;
 
-
+ przesun();
 lcdindeks=0;
+poczekaj();
 while(lcdindeks!=24 ){
 lcdindeks++;
 *LCDWD = ' '; //16
@@ -962,44 +1031,115 @@ indeksh=0;
 
 void LCDSET()
 {
+	historia = (__xdata unsigned char*) 0x4000;
 //	indeksh=0;
 poczekaj();
 *LCDWD = 'S'; //1
 poczekaj();
+
+*historia='S';
+historia++;
+
 *LCDWD = 'E';  //2
 poczekaj();
+
+*historia='E';
+historia++;
+
 *LCDWD = 'T';    //3
 poczekaj();
 
+
+*historia='T';
+historia++;
+
+
+
+
+
 *LCDWD = znaki_odebrane[3]; //4
 poczekaj();
+
+*historia=znaki_odebrane[3];
+historia++;
+
+
 *LCDWD = znaki_odebrane[4]; //5
 poczekaj();
+
+*historia=znaki_odebrane[4];
+historia++;
+
 *LCDWD = '.'; //6
 poczekaj();
+
+*historia='.';
+historia++;
+
 *LCDWD =znaki_odebrane[6];
 poczekaj();
+
+*historia=znaki_odebrane[6];
+historia++;
+
 *LCDWD = znaki_odebrane[7]; //8
 poczekaj();
+
+*historia=znaki_odebrane[7];
+historia++;
+
 *LCDWD = '.'; //9
 poczekaj();
+
+*historia='.';
+historia++;
+
+
 *LCDWD = znaki_odebrane[9]; //10
 poczekaj();
+
+*historia=znaki_odebrane[9];
+historia++;
+
+
 *LCDWD = znaki_odebrane[10]; //11
 poczekaj();
+*historia=znaki_odebrane[10];
+historia++;
+
+
 *LCDWD = ' '; //12
 poczekaj();
+
+*historia=' ';
+historia++;
+
+
 *LCDWD = ' '; //13
 poczekaj();
+
+*historia=' ';
+historia++;
+
 *LCDWD = 'O'; //14
 poczekaj();
+*historia='O';
+historia++;
+
 *LCDWD = 'K'; //15
 poczekaj();
+*historia='K';
+historia++;
+
 *LCDWD = ' '; //16
+*historia=' ';
+historia++;
 poczekaj();
 
+przesun();
 
 lcdindeks=0;
+poczekaj();
 while(lcdindeks!=24 ){
 lcdindeks++;
 *LCDWD = ' '; //16
@@ -1013,7 +1153,10 @@ indeksh=0;
 
 void LCDERR()
 {// indeksh=0;
+//historia=(__xdata unsigned char*) zapiszhistorie;
+historia = (__xdata unsigned char*) 0x4000;
 errindeks=0;
+indeksh=0;//przeniesienie tego nic nie zmienilo
 
 poczekaj();
 while(znaki_odebrane[errindeks]!='-')
@@ -1058,7 +1201,7 @@ poczekaj();
 }
 if(ilerozkazow<7)
 ilerozkazow++;
-indeksh=0;
+//zapiszhistorie=(unsigned char)historia;
 
 }
 
