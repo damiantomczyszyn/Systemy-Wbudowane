@@ -1,0 +1,6 @@
+//Prêdkoœæ 4800   Liczba bitów miêdzy bajtami: 2
+//Polecenie SET - ‘SET00.00.01’ bez spacji pomiêdzy i bez enetra na koñcu
+//GET z enterem
+//EDIT z enterem
+// przechowywane 7 ostatnich rozkazów
+//wszystkie zadania wykonane
